@@ -7,6 +7,5 @@ namespace MongoODM.Abstracts
         TResult Serialize<TEntity>(TEntity entity) where TEntity : class;
 
         IEnumerable<TResult> Serialize<TEntity>(IEnumerable<TEntity> entity) where TEntity : class;
-
     }
 }

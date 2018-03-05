@@ -16,49 +16,51 @@ namespace MongoODM.ItemsSets
     internal class MongoDbModelsProvider<TEntity> : IModelsProvider<TEntity> where TEntity : class, new()
     {
         const string MongoIdProperty = "_id";
-        private IMongoDatabase database;
-        private ITypeInitializer typeInitializer;
-        private TypeModel currentTypeModel;
-        private IModelSerializer<BsonDocument> serializer;
-        private static bool isInitialized = false;
-        private MongoDbContext context;
-        private IIncludableEnumerable<TEntity> includable;
+        private readonly IMongoDatabase _database;
+        private readonly ITypeInitializer _typeInitializer;
+        private readonly TypeModel _currentTypeModel;
+        private readonly IModelSerializer<BsonDocument> _serializer;
+        private static bool _isInitialized = false;
+        private readonly MongoDbContext _context;
+        private readonly IIncludableEnumerable<TEntity> _includable;
+        private readonly MethodInfo _setRelationsMethod;
 
         public MongoDbModelsProvider(IMongoDatabase database, MongoDbContext context)
         {
-            this.database = database;
-            this.typeInitializer = new TypeInitializer();
-            this.currentTypeModel = typeInitializer.InitializeType<TEntity>();
-            this.serializer = new ModelSerializer<BsonDocument>(this.typeInitializer);
-            this.context = context;
-            this.includable = new IncludableEnumerable<TEntity>(database, typeInitializer);
+            this._database = database;
+            this._typeInitializer = new TypeInitializer();
+            this._currentTypeModel = _typeInitializer.InitializeType<TEntity>();
+            this._serializer = new ModelSerializer(this._typeInitializer);
+            this._context = context;
+            this._includable = new IncludableEnumerable<TEntity>(database, _typeInitializer);
+            this._setRelationsMethod = this.GetType().GetMethod(nameof(this.SetRelations), BindingFlags.NonPublic | BindingFlags.Instance);
         }
 
         public void InitializeQuery()
         {
-            if (!isInitialized)
+            if (!_isInitialized)
             {
-                IClassMapper classMapper = new ClassMapper(this.typeInitializer);
+                IClassMapper classMapper = new ClassMapper(this._typeInitializer);
                 classMapper.MapClass<TEntity>();
-                IQueryInitializer queryInitializer = new QueryInitializer(this.typeInitializer);
+                IQueryInitializer queryInitializer = new QueryInitializer(this._typeInitializer);
                 queryInitializer.Initialize<TEntity>();
-                isInitialized = true;
+                _isInitialized = true;
             }
         }
 
         public IEnumerable<TEntity> Include()
         {
-            return this.includable.Include();
+            return this._includable.Include();
         }
 
         public IEnumerable<TEntity> Include(params string[] navigationPropsPath)
         {
-            return this.includable.Include(navigationPropsPath);
+            return this._includable.Include(navigationPropsPath);
         }
 
         public IEnumerable<TEntity> Include(params Expression<Func<TEntity, object>>[] navigationPropsPath)
         {
-            return this.includable.Include(navigationPropsPath);
+            return this._includable.Include(navigationPropsPath);
         }
 
         public void Add(TEntity entity)
@@ -69,24 +71,25 @@ namespace MongoODM.ItemsSets
             }
 
             var id = ObjectId.GenerateNewId().ToString();
-            this.currentTypeModel.CurrentType.GetProperty(this.currentTypeModel.IdName).SetValue(entity, id);
-            var document = this.serializer.Serialize(entity);
-            this.database.GetCollection<BsonDocument>(currentTypeModel.CollectionName).InsertOne(document);
+            this._currentTypeModel.CurrentType.GetProperty(this._currentTypeModel.IdName).SetValue(entity, id);
+            var document = this._serializer.Serialize(entity);
+            this._database.GetCollection<BsonDocument>(_currentTypeModel.CollectionName).InsertOne(document);
         }
 
         public void AddRange(IEnumerable<TEntity> entities)
         {
-            var list = new List<BsonDocument>();
-            var prop = this.currentTypeModel.CurrentType.GetProperty(this.currentTypeModel.IdName);
-            foreach (var e in entities)
-            {
-                var id = ObjectId.GenerateNewId().ToString();
-                prop.SetValue(e, id);
-                var document = this.serializer.Serialize(e);
-                list.Add(document);
-            }
+            var prop = this._currentTypeModel.CurrentType.GetProperty(this._currentTypeModel.IdName);
 
-            this.database.GetCollection<BsonDocument>(currentTypeModel.CollectionName).InsertMany(list);
+            IEnumerable<BsonDocument> insertableSequance = entities.Select(ent =>
+             {
+                 var id = ObjectId.GenerateNewId().ToString();
+                 prop.SetValue(ent, id);
+                 return this._serializer.Serialize(ent);
+             });
+
+            entities = null;
+
+            this._database.GetCollection<BsonDocument>(_currentTypeModel.CollectionName).InsertMany(insertableSequance);
         }
 
         public void Update(TEntity entity)
@@ -96,12 +99,12 @@ namespace MongoODM.ItemsSets
                 return;
             }
 
-             this.UpdateIncludedToCollectionModels(entity);
+            this.UpdateIncludedToCollectionModels(entity);
 
-            var document = this.serializer.Serialize(entity);
+            var document = this._serializer.Serialize(entity);
             var id = document[MongoIdProperty];
-            var doc = new BsonDocument(MongoIdProperty, id);
-            this.database.GetCollection<BsonDocument>(currentTypeModel.CollectionName).ReplaceOne(doc, document);
+            var filter = new BsonDocument(MongoIdProperty, id);
+            this._database.GetCollection<BsonDocument>(_currentTypeModel.CollectionName).ReplaceOne(filter, document);
         }
 
         public void UpdateRange(IEnumerable<TEntity> entities)
@@ -114,12 +117,12 @@ namespace MongoODM.ItemsSets
 
         public void Remove(TEntity entity)
         {
-            var id = this.currentTypeModel.CurrentType
-                .GetProperty(currentTypeModel.IdName)
+            var id = this._currentTypeModel.CurrentType
+                .GetProperty(_currentTypeModel.IdName)
                 .GetValue(entity)
                 .ToString();
             var doc = new BsonDocument(MongoIdProperty, id);
-            this.database.GetCollection<BsonDocument>(currentTypeModel.CollectionName).DeleteOne(doc);
+            this._database.GetCollection<BsonDocument>(_currentTypeModel.CollectionName).DeleteOne(doc);
         }
 
         public void RemoveRange(IEnumerable<TEntity> entities)
@@ -132,7 +135,7 @@ namespace MongoODM.ItemsSets
 
         public IEnumerator<TEntity> GetEnumerator()
         {
-            return this.includable.GetEnumerator();
+            return this._includable.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -143,7 +146,7 @@ namespace MongoODM.ItemsSets
         private void UpdateIncludedToCollectionModels(TEntity entity)
         {
             var trackingListType = typeof(TrackingList<>);
-            var trackingProps = this.currentTypeModel
+            var trackingProps = this._currentTypeModel
                 .CurrentType.GetProperties()
                 .Where(p => (p.PropertyType.IsClass || p.PropertyType.IsInterface) && p.PropertyType != typeof(string));
 
@@ -154,7 +157,6 @@ namespace MongoODM.ItemsSets
 
                 if (trListInstance != null)
                 {
-
                     var st = trListInstance.GetType().Name;
 
                     if (st != trackingListType.Name)
@@ -162,17 +164,14 @@ namespace MongoODM.ItemsSets
                         continue;
                     }
 
-                    var actualTypeModel = this.typeInitializer.GetTypeModel(trListGerType);
+                    var actualTypeModel = this._typeInitializer.GetTypeModel(trListGerType);
 
                     if (actualTypeModel != null)
                     {
-                        var currentTypeProps = trListGerType.GetProperties().Where(p => p.PropertyType == this.currentTypeModel.CurrentType);
-                        var t = this.GetType().GetMethod(nameof(this.SetRelations), BindingFlags.NonPublic | BindingFlags.Instance);
-                        var method = t.MakeGenericMethod(trListGerType);
-                        method.Invoke(this, new[] { entity, trListInstance, currentTypeProps });
+                        var currentTypeProps = trListGerType.GetProperties().Where(p => p.PropertyType == this._currentTypeModel.CurrentType);
+                        this._setRelationsMethod.MakeGenericMethod(trListGerType).Invoke(this, new[] { entity, trListInstance, currentTypeProps });
                     }
                 }
-
             }
         }
 
@@ -180,7 +179,7 @@ namespace MongoODM.ItemsSets
         {
             var newEntities = new List<T>();
             var updatedEntities = new List<T>();
-            var tmodel = this.typeInitializer.GetTypeModel<T>();
+            var tmodel = this._typeInitializer.GetTypeModel<T>();
             var idProp = typeof(T).GetProperty(tmodel.IdName);
 
             foreach (var ent in trackingList.AddedList)
@@ -216,24 +215,22 @@ namespace MongoODM.ItemsSets
                 }
             }
 
-            var tModel = this.typeInitializer.GetTypeModel<T>();
-            var modelsProvider = this.context.Set<T>();
+            var tModel = this._typeInitializer.GetTypeModel<T>();
+            var modelsProvider = this._context.Set<T>();
             var updated = updatedEntities.Concat(trackingList.RemovedList);
 
-            if (updated.Count() > 0)
+            if (updated.Any())
             {
                 modelsProvider.UpdateRange(updated);
             }
 
-            if(newEntities.Count() > 0)
+            if (newEntities.Any())
             {
                 modelsProvider.AddRange(newEntities);
-
             }
 
             trackingList.RemovedList.Clear();
             trackingList.AddedList.Clear();
         }
-
     }
 }

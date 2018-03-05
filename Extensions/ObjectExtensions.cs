@@ -14,5 +14,15 @@ namespace MongoODM.Extensions
         {
             return obj.GetType().GetProperty(propertyName);
         }
+
+        public static IEnumerable<MethodInfo> GetMethods(this object obj)
+        {
+            return obj.GetType().GetMethods();
+        }
+
+        public static MethodInfo GetMethod(this object obj, string methodName)
+        {
+            return obj.GetType().GetMethod(methodName);
+        }
     }
 }             

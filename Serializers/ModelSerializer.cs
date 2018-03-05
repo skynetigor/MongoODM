@@ -5,19 +5,19 @@ using System.Linq;
 
 namespace MongoODM.Serializers
 {
-    internal class ModelSerializer<T> : IModelSerializer<BsonDocument>
+    internal class ModelSerializer : IModelSerializer<BsonDocument>
     {
         private const string MongoIdProperty = "_id";
-        private readonly ITypeInitializer typeInitializer;
+        private readonly ITypeInitializer _typeInitializer;
 
         public ModelSerializer(ITypeInitializer typeInitializer)
         {
-            this.typeInitializer = typeInitializer;
+            this._typeInitializer = typeInitializer;
         }
 
         public BsonDocument Serialize<TEntity>(TEntity entity) where TEntity : class
         {
-            var thisTypeModel = this.typeInitializer.InitializeType<TEntity>();
+            var thisTypeModel = this._typeInitializer.InitializeType<TEntity>();
 
             var entType = thisTypeModel.CurrentType;
             var id = entType.GetProperty(thisTypeModel.IdName).GetValue(entity).ToString();
@@ -42,7 +42,7 @@ namespace MongoODM.Serializers
                     document[prop.Name + "Id"] = "null";
                     if (currentValue != null)
                     {
-                        var tmodel = this.typeInitializer.GetTypeModel(prop.PropertyType);
+                        var tmodel = this._typeInitializer.GetTypeModel(prop.PropertyType);
                         var currentProp = prop.PropertyType.GetProperty(tmodel.IdName);
                         var val = currentProp.GetValue(currentValue);
 

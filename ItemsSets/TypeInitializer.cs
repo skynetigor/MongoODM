@@ -10,7 +10,7 @@ namespace MongoODM.ItemsSets
 {
     internal class TypeInitializer : ITypeInitializer
     {
-        const string CollectionPrefix = "s";
+        const string CollectionPostfix = "s";
         private static Dictionary<Type, TypeModel> dictionary = new Dictionary<Type, TypeModel>();
 
         public TypeModel InitializeType<T>()
@@ -54,11 +54,13 @@ namespace MongoODM.ItemsSets
             var model = new TypeModel();
 
             var attributes = type.GetCustomAttributes<AbstractORMAttribute>();
+
             foreach (var attr in attributes)
             {
                 var method = attr.GetType().GetMethod("Map", BindingFlags.NonPublic | BindingFlags.Instance);
-                method.Invoke(attr, new[] { model });
+                method.Invoke(attr, new object[] { model });
             }
+
             this.SetProperties(type, model);
             return model;
         }
@@ -67,7 +69,7 @@ namespace MongoODM.ItemsSets
         {
             if (string.IsNullOrEmpty(model.CollectionName))
             {
-                model.CollectionName = type.Name + CollectionPrefix;
+                model.CollectionName = type.Name + CollectionPostfix;
             }
 
             if (string.IsNullOrEmpty(model.IdName))
@@ -81,6 +83,7 @@ namespace MongoODM.ItemsSets
                 {
                     throw new MissingMemberException();
                 }
+
                 model.IdName = id;
             }
         }

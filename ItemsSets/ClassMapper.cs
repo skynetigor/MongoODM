@@ -5,22 +5,26 @@ using MongoODM.Serializers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using MongoODM.Extensions;
 
 namespace MongoODM.ItemsSets
 {
     internal class ClassMapper : IClassMapper
     {
-        private ITypeInitializer typeInitializer;
+        private readonly ITypeInitializer _typeInitializer;
+        private readonly MethodInfo _mapClassGenericMethod;
 
         public ClassMapper(ITypeInitializer typeInitializer)
         {
-            this.typeInitializer = typeInitializer;
+            this._typeInitializer = typeInitializer;
+            this._mapClassGenericMethod = this.GetMethods()
+                .FirstOrDefault(m => m.Name == nameof(this.MapClass));
         }
 
         public void MapClass<T>()
         {
             var type = typeof(T);
-            var tmodel = typeInitializer.GetTypeModel(type);
             BsonSerializer.RegisterSerializer<ICollection<T>>(new TrackingICollectionSerializer<T>());
             BsonSerializer.RegisterSerializer<IList<T>>(new TrackingIListSerializer<T>());
 
@@ -31,9 +35,9 @@ namespace MongoODM.ItemsSets
                       {
                           cm.AutoMap();
                           cm.SetIgnoreExtraElements(true);
-                          foreach(var prop in type.GetProperties())
+                          foreach (var prop in type.GetProperties())
                           {
-                              if(prop.PropertyType.Name == typeof(ICollection<>).Name || prop.PropertyType.Name == typeof(IList<>).Name)
+                              if (prop.PropertyType.Name == typeof(ICollection<>).Name || prop.PropertyType.Name == typeof(IList<>).Name)
                               {
                                   var genericType = prop.PropertyType.GetGenericArguments()[0];
                                   var trackingListType = typeof(TrackingList<>).MakeGenericType(genericType);
@@ -46,12 +50,7 @@ namespace MongoODM.ItemsSets
 
         public void MapClass(Type type)
         {
-            var initTypeMethod = this.GetType()
-                .GetMethods()
-                .FirstOrDefault(m => m.Name == nameof(this.MapClass) && m.GetGenericArguments()
-                .Count() == 1)
-                .MakeGenericMethod(type);
-            initTypeMethod.Invoke(this, null);
+            this._mapClassGenericMethod.MakeGenericMethod(type).Invoke(this, null);
         }
     }
 }
