@@ -1,8 +1,8 @@
 ﻿using MongoDB.Bson;
-using MongoORM.Abstracts;
+using MongoODM.Abstracts;
 using System.Collections.Generic;
 
-namespace MongoORM.ItemsSets
+namespace MongoODM.ItemsSets
 {
     internal class QueryInitializer : IQueryInitializer
     {

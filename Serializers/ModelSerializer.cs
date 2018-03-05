@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
-using MongoORM.Abstracts;
+using MongoODM.Abstracts;
 using MongoDB.Bson;
 using System.Linq;
 
-namespace MongoORM.Serializers
+namespace MongoODM.Serializers
 {
     internal class ModelSerializer<T> : IModelSerializer<BsonDocument>
     {

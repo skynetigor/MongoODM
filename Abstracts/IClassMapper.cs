@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MongoORM.Abstracts
+namespace MongoODM.Abstracts
 {
     public interface IClassMapper
     {

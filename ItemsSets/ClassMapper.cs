@@ -1,12 +1,12 @@
 ﻿using MongoDB.Bson.Serialization;
-using MongoORM.Abstracts;
-using MongoORM.Models;
-using MongoORM.Serializers;
+using MongoODM.Abstracts;
+using MongoODM.Models;
+using MongoODM.Serializers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace MongoORM.ItemsSets
+namespace MongoODM.ItemsSets
 {
     internal class ClassMapper : IClassMapper
     {

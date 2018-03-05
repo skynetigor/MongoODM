@@ -1,9 +1,9 @@
-﻿using MongoORM.Models;
+﻿using MongoODM.Models;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace MongoORM.Attributes
+namespace MongoODM.Attributes
 {
     public abstract class AbstractORMAttribute : Attribute
     {

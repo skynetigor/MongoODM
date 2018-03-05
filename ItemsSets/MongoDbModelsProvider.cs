@@ -1,17 +1,17 @@
 ﻿using MongoDB.Driver;
 using System.Collections.Generic;
-using MongoORM.Abstracts;
-using MongoORM.Models;
+using MongoODM.Abstracts;
+using MongoODM.Models;
 using MongoDB.Bson;
 using System.Collections;
 using System.Linq;
-using MongoORM.Serializers;
+using MongoODM.Serializers;
 using System.Reflection;
-using MongoORM.Includables;
+using MongoODM.Includables;
 using System.Linq.Expressions;
 using System;
 
-namespace MongoORM.ItemsSets
+namespace MongoODM.ItemsSets
 {
     internal class MongoDbModelsProvider<TEntity> : IModelsProvider<TEntity> where TEntity : class, new()
     {
@@ -69,7 +69,7 @@ namespace MongoORM.ItemsSets
             }
 
             var id = ObjectId.GenerateNewId().ToString();
-            this.currentTypeModel.CurrentType.GetProperty(this.currentTypeModel.idName).SetValue(entity, id);
+            this.currentTypeModel.CurrentType.GetProperty(this.currentTypeModel.IdName).SetValue(entity, id);
             var document = this.serializer.Serialize(entity);
             this.database.GetCollection<BsonDocument>(currentTypeModel.CollectionName).InsertOne(document);
         }
@@ -77,7 +77,7 @@ namespace MongoORM.ItemsSets
         public void AddRange(IEnumerable<TEntity> entities)
         {
             var list = new List<BsonDocument>();
-            var prop = this.currentTypeModel.CurrentType.GetProperty(this.currentTypeModel.idName);
+            var prop = this.currentTypeModel.CurrentType.GetProperty(this.currentTypeModel.IdName);
             foreach (var e in entities)
             {
                 var id = ObjectId.GenerateNewId().ToString();
@@ -115,7 +115,7 @@ namespace MongoORM.ItemsSets
         public void Remove(TEntity entity)
         {
             var id = this.currentTypeModel.CurrentType
-                .GetProperty(currentTypeModel.idName)
+                .GetProperty(currentTypeModel.IdName)
                 .GetValue(entity)
                 .ToString();
             var doc = new BsonDocument(MongoIdProperty, id);
@@ -181,7 +181,7 @@ namespace MongoORM.ItemsSets
             var newEntities = new List<T>();
             var updatedEntities = new List<T>();
             var tmodel = this.typeInitializer.GetTypeModel<T>();
-            var idProp = typeof(T).GetProperty(tmodel.idName);
+            var idProp = typeof(T).GetProperty(tmodel.IdName);
 
             foreach (var ent in trackingList.AddedList)
             {

@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <RootNamespace>MongoODM</RootNamespace>
+    <AssemblyName>MongoODM</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
@@ -9,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="MongoDB.Driver" Version="2.4.4" />
+    <PackageReference Include="MongoDB.Driver" Version="2.5.0" />
   </ItemGroup>
 
 </Project>

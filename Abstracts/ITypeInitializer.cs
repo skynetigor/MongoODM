@@ -1,7 +1,7 @@
-﻿using MongoORM.Models;
+﻿using MongoODM.Models;
 using System;
 
-namespace MongoORM.Abstracts
+namespace MongoODM.Abstracts
 {
     public interface ITypeInitializer
     {

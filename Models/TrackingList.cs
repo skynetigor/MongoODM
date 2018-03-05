@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 
-namespace MongoORM.Models
+namespace MongoODM.Models
 {
     internal class TrackingList<T> : ICollection<T>, IList<T>
     {

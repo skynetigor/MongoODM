@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace MongoORM.Abstracts
+namespace MongoODM.Abstracts
 {
     public interface IModelsProvider<TEntity> : IEnumerable<TEntity>, IIncludableEnumerable<TEntity>
         where TEntity: class

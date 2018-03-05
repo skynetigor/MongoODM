@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace MongoORM.Abstracts
+namespace MongoODM.Abstracts
 {
     public interface IModelSerializer<TResult>
     {

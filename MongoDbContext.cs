@@ -1,18 +1,17 @@
-﻿using Microsoft.Win32.SafeHandles;
-using MongoDB.Driver;
-using MongoORM.Abstracts;
-using MongoORM.ItemsSets;
+﻿using MongoDB.Driver;
+using MongoODM.Abstracts;
+using MongoODM.ItemsSets;
 using System;
 using System.Linq;
-using System.Runtime.InteropServices;
+using MongoODM.Extensions;
 
-namespace MongoORM
+namespace MongoODM
 {
-    public class MongoDbContext
+    public abstract class MongoDbContext
     {
-        private IMongoDatabase database;
+        private readonly IMongoDatabase database;
 
-        public MongoDbContext(MongoContextSettings contextSettings)
+        protected MongoDbContext(MongoContextSettings contextSettings)
         {
             var connection = new MongoUrlBuilder(contextSettings.ConnectionString);
             var client = new MongoClient(contextSettings.ConnectionString);
@@ -23,10 +22,9 @@ namespace MongoORM
         public IModelsProvider<T> Set<T>()
             where T : class
         {
-            var contextType = this.GetType();
             var thisType = typeof(T);
             var itemSetType = typeof(IModelsProvider<>);
-            var item = contextType.GetProperties()
+            var item = this.GetProperties()
                 .Where(p => p.PropertyType.Name == itemSetType.Name)
                 .FirstOrDefault(p => p.PropertyType.GetGenericArguments()[0] == thisType);
 
@@ -35,15 +33,13 @@ namespace MongoORM
                 return item.GetValue(this) as IModelsProvider<T>;
             }
 
-            var msg = string.Format("Type \"{0}\" is not sets to this context!", thisType.Name);
+            var msg = string.Format("Type \"{0}\" is not sets for this context!", thisType.Name);
             throw new Exception(msg);
         }
 
         private void Setup()
         {
-            var contextType = this.GetType();
-            var itemSetType = typeof(IModelsProvider<>);
-            var items = contextType.GetProperties().Where(p => p.PropertyType.Name == itemSetType.Name);
+            var items = this.GetProperties().Where(p => p.PropertyType.Name == typeof(IModelsProvider<>).Name);
 
             foreach (var prop in items)
             {

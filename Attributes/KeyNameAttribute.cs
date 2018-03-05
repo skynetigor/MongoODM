@@ -1,7 +1,7 @@
 ﻿using System;
-using MongoORM.Models;
+using MongoODM.Models;
 
-namespace MongoORM.Attributes
+namespace MongoODM.Attributes
 {
     [AttributeUsage(AttributeTargets.Property, Inherited = false, AllowMultiple = true)]
 

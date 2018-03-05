@@ -1,4 +1,4 @@
-﻿namespace MongoORM.Abstracts
+﻿namespace MongoODM.Abstracts
 {
     public interface IQueryInitializer
     {

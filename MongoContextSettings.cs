@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace MongoORM
+namespace MongoODM
 {
     public class MongoContextSettings
     {

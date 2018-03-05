@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
-using MongoORM.Abstracts;
+using MongoODM.Abstracts;
 
-namespace MongoORM.Extensions
+namespace MongoODM.Extensions
 {
     public static class MongoORMExtension
     {

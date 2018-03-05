@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace MongoORM.Models
+namespace MongoODM.Models
 {
     public class TypeModel
     {

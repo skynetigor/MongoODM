@@ -1,12 +1,12 @@
-﻿using MongoORM.Abstracts;
-using MongoORM.Attributes;
-using MongoORM.Models;
+﻿using MongoODM.Abstracts;
+using MongoODM.Attributes;
+using MongoODM.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace MongoORM.ItemsSets
+namespace MongoODM.ItemsSets
 {
     internal class TypeInitializer : ITypeInitializer
     {

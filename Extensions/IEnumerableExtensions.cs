@@ -4,7 +4,7 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 
-namespace MongoORM.Extensions
+namespace MongoODM.Extensions
 {
     internal static class IEnumerableExtensions
     {
