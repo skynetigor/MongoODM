@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using MongoODM.Models;
 
 namespace MongoODM.Attributes
@@ -7,11 +8,9 @@ namespace MongoODM.Attributes
 
     public class KeyNameAttribute : AbstractORMAttribute
     {
-        public string Name { get; set; }
-
-        protected override void Map(TypeModel model)
+        protected override void Map(TypeModel model, Type currentType)
         {
-            model.IdName = Name;
+            model.IdProperty = currentType.GetProperties().FirstOrDefault(p => p.GetCustomAttributes(typeof(KeyNameAttribute), false) != null);
         }
     }
 }

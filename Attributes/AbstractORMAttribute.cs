@@ -7,6 +7,6 @@ namespace MongoODM.Attributes
 {
     public abstract class AbstractORMAttribute : Attribute
     {
-        protected abstract void Map(TypeModel model);
+        protected abstract void Map(TypeModel model, Type currentType);
     }
 }

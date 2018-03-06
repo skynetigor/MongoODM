@@ -9,13 +9,16 @@ namespace MongoODM
 {
     public abstract class MongoDbContext
     {
-        private readonly IMongoDatabase database;
+        private readonly IMongoDatabase _database;
 
-        protected MongoDbContext(MongoContextSettings contextSettings)
+        protected bool DropCollectionsWhenContextCreating { get; }
+
+        protected MongoDbContext(MongoContextSettings contextSettings, bool dropCollectionsWhenContextCreating = false)
         {
             var connection = new MongoUrlBuilder(contextSettings.ConnectionString);
             var client = new MongoClient(contextSettings.ConnectionString);
-            this.database = client.GetDatabase(connection.DatabaseName);
+            this._database = client.GetDatabase(connection.DatabaseName);
+            this.DropCollectionsWhenContextCreating = dropCollectionsWhenContextCreating;
             Setup();
         }
 
@@ -55,11 +58,11 @@ namespace MongoODM
             }
         }
 
-        private object CreateProviderInstance(Type type)
+        protected virtual object CreateProviderInstance(Type modelType)
         {
             var providerType = typeof(MongoDbModelsProvider<>);
-            providerType = providerType.MakeGenericType(type);
-            return Activator.CreateInstance(providerType, this.database, this);
+            providerType = providerType.MakeGenericType(modelType);
+            return Activator.CreateInstance(providerType, this._database, this, this.DropCollectionsWhenContextCreating);
         }
     }
 }

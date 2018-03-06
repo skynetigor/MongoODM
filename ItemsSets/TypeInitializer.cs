@@ -58,7 +58,7 @@ namespace MongoODM.ItemsSets
             foreach (var attr in attributes)
             {
                 var method = attr.GetType().GetMethod("Map", BindingFlags.NonPublic | BindingFlags.Instance);
-                method.Invoke(attr, new object[] { model });
+                method.Invoke(attr, new object[] { model, type });
             }
 
             this.SetProperties(type, model);
@@ -72,20 +72,15 @@ namespace MongoODM.ItemsSets
                 model.CollectionName = type.Name + CollectionPostfix;
             }
 
-            if (string.IsNullOrEmpty(model.IdName))
+            if (model.IdProperty == null)
             {
-                var props = type.GetProperties();
-                var id = type.GetProperties().FirstOrDefault(
+                model.IdProperty = type.GetProperties().FirstOrDefault(
                     prop => prop.Name.ToLower() == (type.Name + "id").ToLower()
-                || prop.Name.ToLower() == "id".ToLower()).Name;
-
-                if (string.IsNullOrWhiteSpace(id))
-                {
-                    throw new MissingMemberException();
-                }
-
-                model.IdName = id;
+                            || prop.Name.ToLower() == "id".ToLower());
+                return; ;
             }
+
+            throw new MissingMemberException();
         }
     }
 }

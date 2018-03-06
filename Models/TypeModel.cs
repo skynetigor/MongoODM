@@ -1,6 +1,7 @@
 ﻿using MongoDB.Bson;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace MongoODM.Models
 {
@@ -13,7 +14,7 @@ namespace MongoODM.Models
 
         public string CollectionName { get; set; }
 
-        public string IdName { get; set; }
+        public PropertyInfo IdProperty { get; set; }
 
         public Type CurrentType { get; set; }
 

@@ -2,6 +2,8 @@
 using MongoODM.Abstracts;
 using MongoDB.Bson;
 using System.Linq;
+using MongoDB.Bson.Serialization;
+using MongoODM.Extensions;
 
 namespace MongoODM.Serializers
 {
@@ -17,44 +19,51 @@ namespace MongoODM.Serializers
 
         public BsonDocument Serialize<TEntity>(TEntity entity) where TEntity : class
         {
-            var thisTypeModel = this._typeInitializer.InitializeType<TEntity>();
+            var entityTypeModel = this._typeInitializer.InitializeType<TEntity>();
 
-            var entType = thisTypeModel.CurrentType;
-            var id = entType.GetProperty(thisTypeModel.IdName).GetValue(entity).ToString();
+            var id = entityTypeModel.IdProperty.GetValue(entity);
             var document = new BsonDocument
             {
-                { MongoIdProperty, id }
+                { MongoIdProperty, (string)id }
             };
 
-            foreach (var prop in entType.GetProperties().Where(p => p.Name != thisTypeModel.IdName))
+            foreach (var prop in entityTypeModel.CurrentType.GetProperties())
             {
-                if (prop.PropertyType.Name == typeof(ICollection<>).Name
-                    || prop.PropertyType.Name == typeof(IEnumerable<>).Name)
+                object propertyValue = prop.GetValue(entity);
+
+                if (prop.PropertyType.Name == typeof(ICollection<>).Name ||
+                    prop.PropertyType.Name == typeof(IList<>).Name || propertyValue == null)
                 {
                     continue;
                 }
 
-                else if (prop.PropertyType.IsClass
-                && prop.PropertyType != typeof(string))
+                if (this._typeInitializer.GetTypeModel(prop.PropertyType) != null)
                 {
-                    var currentValue = prop.GetValue(entity);
-                    document.Remove(prop.Name);
-                    document[prop.Name + "Id"] = "null";
-                    if (currentValue != null)
-                    {
-                        var tmodel = this._typeInitializer.GetTypeModel(prop.PropertyType);
-                        var currentProp = prop.PropertyType.GetProperty(tmodel.IdName);
-                        var val = currentProp.GetValue(currentValue);
+                    var propTypeModel = this._typeInitializer.GetTypeModel(prop.PropertyType);
+                    object idValue = propTypeModel.IdProperty.GetValue(propertyValue);
 
-                        if (val != null)
+                    if (idValue != null)
+                    {
+                        if (prop.PropertyType == typeof(string))
                         {
-                            document[prop.Name + "Id"] = val.ToString();
+                            document[prop.Name] = (string)idValue;
+                        }
+                        else
+                        {
+                            document[prop.Name + "Id"] = propertyValue.ToBson();
                         }
                     }
                 }
-                else
+                else if (prop != entityTypeModel.IdProperty)
                 {
-                    document[prop.Name] = prop.GetValue(entity).ToString();
+                    if (prop.PropertyType == typeof(string))
+                    {
+                        document[prop.Name] = (string)propertyValue;
+                    }
+                    else
+                    {
+                        document[prop.Name] = propertyValue.ToBson();
+                    }
                 }
             }
 
