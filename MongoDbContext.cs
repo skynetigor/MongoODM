@@ -3,15 +3,20 @@ using MongoODM.Abstracts;
 using MongoODM.ItemsSets;
 using System;
 using System.Linq;
+using Microsoft.Extensions.DependencyInjection;
+using MongoDB.Bson;
 using MongoODM.Extensions;
+using MongoODM.Serializers;
 
 namespace MongoODM
 {
     public abstract class MongoDbContext
     {
         private readonly IMongoDatabase _database;
+        private readonly IServiceCollection _serviceCollection = new ServiceCollection();
+        private IServiceProvider _serviceProvider;
 
-        protected bool DropCollectionsWhenContextCreating { get; }
+        public bool DropCollectionsWhenContextCreating { get; }
 
         protected MongoDbContext(MongoContextSettings contextSettings, bool dropCollectionsWhenContextCreating = false)
         {
@@ -25,29 +30,25 @@ namespace MongoODM
         public IModelsProvider<T> Set<T>()
             where T : class
         {
-            var thisType = typeof(T);
-            var itemSetType = typeof(IModelsProvider<>);
-            var item = this.GetProperties()
-                .Where(p => p.PropertyType.Name == itemSetType.Name)
-                .FirstOrDefault(p => p.PropertyType.GetGenericArguments()[0] == thisType);
-
-            if (item != null)
-            {
-                return item.GetValue(this) as IModelsProvider<T>;
-            }
-
-            var msg = string.Format("Type \"{0}\" is not sets for this context!", thisType.Name);
-            throw new Exception(msg);
+            return this._serviceProvider.GetService<IModelsProvider<T>>();
         }
 
         private void Setup()
         {
-            var items = this.GetProperties().Where(p => p.PropertyType.Name == typeof(IModelsProvider<>).Name);
+            this.ConfigureServices(this._serviceCollection);
+
+            var items = this.GetProperties().Where(p =>  p.PropertyType.Name == (typeof(IModelsProvider<>).Name));
 
             foreach (var prop in items)
             {
-                var obj = this.CreateProviderInstance(prop.PropertyType.GetGenericArguments()[0]);
-                prop.SetValue(this, obj);
+                this._serviceCollection.AddSingleton(MakeGenericTypeModelsProviderInterface(prop.PropertyType), MakeGenericTypeModelsProviderImplementation(prop.PropertyType));
+            }
+
+            this._serviceProvider = this._serviceCollection.BuildServiceProvider();
+
+            foreach (var prop in items)
+            {
+                prop.SetValue(this, this._serviceProvider.GetService(MakeGenericTypeModelsProviderInterface(prop.PropertyType)));
             }
 
             foreach (var prop in items)
@@ -58,11 +59,25 @@ namespace MongoODM
             }
         }
 
-        protected virtual object CreateProviderInstance(Type modelType)
+        private Type MakeGenericTypeModelsProviderInterface(Type argument)
         {
-            var providerType = typeof(MongoDbModelsProvider<>);
-            providerType = providerType.MakeGenericType(modelType);
-            return Activator.CreateInstance(providerType, this._database, this, this.DropCollectionsWhenContextCreating);
+            return typeof(IModelsProvider<>).MakeGenericType(argument.GetGenericArguments()[0]);
         }
+
+        private Type MakeGenericTypeModelsProviderImplementation(Type argument)
+        {
+            return typeof(MongoDbModelsProvider<>).MakeGenericType(argument.GetGenericArguments()[0]);
+        }
+
+        protected virtual void ConfigureServices(IServiceCollection serviceCollection)
+        {
+            serviceCollection.AddSingleton<ITypeInitializer, TypeInitializer>();
+            serviceCollection.AddSingleton<IMongoDatabase>(this._database);
+            serviceCollection.AddSingleton<MongoDbContext>(this);
+            serviceCollection.AddSingleton<IModelSerializer<BsonDocument>, ModelSerializer>();
+            serviceCollection.AddSingleton<IClassMapper, ClassMapper>();
+            serviceCollection.AddSingleton<IQueryInitializer, QueryInitializer>();
+        }
+
     }
 }

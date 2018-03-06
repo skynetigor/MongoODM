@@ -25,13 +25,13 @@ namespace MongoODM.ItemsSets
         private readonly IIncludableEnumerable<TEntity> _includable;
         private readonly MethodInfo _setRelationsMethod;
 
-        public MongoDbModelsProvider(IMongoDatabase database, MongoDbContext context, bool dropCollection)
+        public MongoDbModelsProvider(IMongoDatabase database, MongoDbContext context)
         {
             this._database = database;
             this._typeInitializer = new TypeInitializer();
             this._currentTypeModel = _typeInitializer.InitializeType<TEntity>();
 
-            if (dropCollection)
+            if (context.DropCollectionsWhenContextCreating)
             {
                 database.DropCollection(_currentTypeModel.CollectionName);
             }
