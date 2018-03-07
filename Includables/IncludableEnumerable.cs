@@ -7,6 +7,8 @@ using MongoDB.Driver;
 using MongoDB.Bson;
 using MongoODM.Models;
 using System.Linq;
+using MongoODM.Extensions;
+using MongoODM.QueryProvider;
 
 namespace MongoODM.Includables
 {
@@ -14,7 +16,7 @@ namespace MongoODM.Includables
     {
         private IMongoDatabase database;
         private ITypeInitializer typeInitializer;
-        private PipelineDefinition<TEntity, TEntity> pipelineDefinition;
+
         private TypeModel currentTypeModel;
 
         public IncludableEnumerable(IMongoDatabase database, ITypeInitializer typeInitializer)
@@ -24,20 +26,7 @@ namespace MongoODM.Includables
             this.currentTypeModel = this.typeInitializer.GetTypeModel<TEntity>();
         }
 
-        public IEnumerator<TEntity> GetEnumerator()
-        {
-            if (pipelineDefinition == null)
-            {
-                this.pipelineDefinition = new BsonDocument[0];
-            }
-
-            return this.database.GetCollection<TEntity>(this.currentTypeModel.CollectionName)
-                .Aggregate(this.pipelineDefinition)
-                .ToEnumerable<TEntity>()
-                .GetEnumerator();
-        }
-
-        public IEnumerable<TEntity> Include(params Expression<Func<TEntity, object>>[] navigationPropsPath)
+        public IQueryable<TEntity> Include(params Expression<Func<TEntity, object>>[] navigationPropsPath)
         {
             var p = navigationPropsPath
                 .Where(exp => exp.Body is MemberExpression)
@@ -48,7 +37,7 @@ namespace MongoODM.Includables
             return this.Include(p);
         }
 
-        public IEnumerable<TEntity> Include(params string[] navigationPropsPath)
+        public IQueryable<TEntity> Include(params string[] navigationPropsPath)
         {
             var includableInstance = new IncludableEnumerable<TEntity>(database, typeInitializer);
             var typeEntity = typeof(TEntity);
@@ -67,11 +56,21 @@ namespace MongoODM.Includables
                 }
             }
 
-            includableInstance.pipelineDefinition = queryList;
-            return includableInstance;
+            return this.AsQueryable(queryList);
         }
 
-        public IEnumerable<TEntity> Include()
+        private IQueryable<TEntity> AsQueryable(IList<BsonDocument> pipe)
+        {
+            var queryable = this.database.GetCollection<TEntity>(this.currentTypeModel.CollectionName).AsQueryable();
+            return new MongoQueryable<TEntity>(queryable, pipe);
+        }
+
+        public IQueryable<TEntity> AsQueryable()
+        {
+            return this.AsQueryable(null);
+        }
+
+        public IQueryable<TEntity> Include()
         {
             var includableInstance = new IncludableEnumerable<TEntity>(database, typeInitializer);
             var typeEntity = typeof(TEntity);
@@ -82,14 +81,7 @@ namespace MongoODM.Includables
                 queryList.AddRange(doc);
             }
 
-            includableInstance.pipelineDefinition = queryList;
-            return includableInstance;
+            return this.AsQueryable(queryList);
         }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return this.GetEnumerator();
-        }
-
     }
 }

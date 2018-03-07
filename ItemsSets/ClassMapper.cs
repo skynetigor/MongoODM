@@ -27,6 +27,7 @@ namespace MongoODM.ItemsSets
             var type = typeof(T);
             BsonSerializer.RegisterSerializer<ICollection<T>>(new TrackingICollectionSerializer<T>());
             BsonSerializer.RegisterSerializer<IList<T>>(new TrackingIListSerializer<T>());
+            //BsonSerializer.RegisterSerializer<T>(new ModelsSerializer<T>(this._typeInitializer));
 
             if (!BsonClassMap.IsClassMapRegistered(type))
             {

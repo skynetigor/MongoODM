@@ -36,7 +36,6 @@ namespace MongoODM.ItemsSets
                 database.DropCollection(_currentTypeModel.CollectionName);
             }
 
-            this._serializer = new ModelSerializer(this._typeInitializer);
             this._context = context;
             this._includable = new IncludableEnumerable<TEntity>(database, _typeInitializer);
             this._setRelationsMethod = this.GetType().GetMethod(nameof(this.SetRelations), BindingFlags.NonPublic | BindingFlags.Instance);
@@ -54,17 +53,22 @@ namespace MongoODM.ItemsSets
             }
         }
 
-        public IEnumerable<TEntity> Include()
+        public IQueryable<TEntity> Include()
         {
             return this._includable.Include();
         }
 
-        public IEnumerable<TEntity> Include(params string[] navigationPropsPath)
+        public IQueryable<TEntity> Include(params string[] navigationPropsPath)
         {
             return this._includable.Include(navigationPropsPath);
         }
 
-        public IEnumerable<TEntity> Include(params Expression<Func<TEntity, object>>[] navigationPropsPath)
+        public IQueryable<TEntity> AsQueryable()
+        {
+            return this._includable.AsQueryable();
+        }
+
+        public IQueryable<TEntity> Include(params Expression<Func<TEntity, object>>[] navigationPropsPath)
         {
             return this._includable.Include(navigationPropsPath);
         }
@@ -76,36 +80,29 @@ namespace MongoODM.ItemsSets
                 return;
             }
 
-            var id = ObjectId.GenerateNewId().ToString();
-            this._currentTypeModel.IdProperty.SetValue(entity, id);
-            var document = this._serializer.Serialize(entity);
-            this._database.GetCollection<BsonDocument>(_currentTypeModel.CollectionName).InsertOne(document);
+            this._database.GetCollection<TEntity>(_currentTypeModel.CollectionName).InsertOne(entity);
         }
 
         public void AddRange(IEnumerable<TEntity> entities)
         {
-            var insertableList = new List<BsonDocument>();
-            int c = 0;
+            var insertableList = new List<TEntity>();
+            var packageCount = 100;
+            var currentCount = 0;
 
             foreach (TEntity entity in entities)
             {
-                var id = ObjectId.GenerateNewId().ToString();
-                this._currentTypeModel.IdProperty.SetValue(entity, id);
-                insertableList.Add(this._serializer.Serialize(entity));
+                insertableList.Add(entity);
 
-                if (c > 0 && c % 100 == 0)
+                if (currentCount % packageCount == 0)
                 {
-                    this._database.GetCollection<BsonDocument>(_currentTypeModel.CollectionName).InsertMany(insertableList);
+                    this._database.GetCollection<TEntity>(_currentTypeModel.CollectionName).InsertMany(insertableList);
                     insertableList.Clear();
                 }
 
-                c++;
+                currentCount++;
             }
 
-            if (insertableList.Any())
-            {
-                this._database.GetCollection<BsonDocument>(_currentTypeModel.CollectionName).InsertMany(insertableList);
-            }
+            this._database.GetCollection<TEntity>(_currentTypeModel.CollectionName).InsertMany(insertableList);
         }
 
         public void Update(TEntity entity)
@@ -133,11 +130,7 @@ namespace MongoODM.ItemsSets
 
         public void Remove(TEntity entity)
         {
-            var id = this._currentTypeModel.IdProperty
-                .GetValue(entity)
-                .ToString();
-            var doc = new BsonDocument(MongoIdProperty, id);
-            this._database.GetCollection<BsonDocument>(_currentTypeModel.CollectionName).DeleteOne(doc);
+            this._database.GetCollection<BsonDocument>(_currentTypeModel.CollectionName).DeleteOne(entity.ToBsonDocument());
         }
 
         public void RemoveRange(IEnumerable<TEntity> entities)
@@ -150,7 +143,7 @@ namespace MongoODM.ItemsSets
 
         public IEnumerator<TEntity> GetEnumerator()
         {
-            return this._includable.GetEnumerator();
+            return this._includable.AsQueryable().GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()

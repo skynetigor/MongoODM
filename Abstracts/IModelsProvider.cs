@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace MongoODM.Abstracts
 {
@@ -18,6 +19,5 @@ namespace MongoODM.Abstracts
         void Remove(TEntity entity);
 
         void RemoveRange(IEnumerable<TEntity> entities);
-
     }
 }

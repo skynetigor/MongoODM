@@ -1,16 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 
 namespace MongoODM.Abstracts
 {
-    public interface IIncludableEnumerable<TEntity> : IEnumerable<TEntity>
+    public interface IIncludableEnumerable<TEntity>
     {
-        IEnumerable<TEntity> Include();
+        IQueryable<TEntity> Include();
 
-        IEnumerable<TEntity> Include(params Expression<Func<TEntity, object>>[] navigationPropsPath);
+        IQueryable<TEntity> Include(params Expression<Func<TEntity, object>>[] navigationPropsPath);
 
-        IEnumerable<TEntity> Include(params string[] navigationPropsPath);
+        IQueryable<TEntity> Include(params string[] navigationPropsPath);
+
+        IQueryable<TEntity> AsQueryable();
 
     }
 }

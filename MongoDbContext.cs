@@ -4,15 +4,13 @@ using MongoODM.ItemsSets;
 using System;
 using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
-using MongoDB.Bson;
 using MongoODM.Extensions;
-using MongoODM.Serializers;
 
 namespace MongoODM
 {
     public abstract class MongoDbContext
     {
-        private readonly IMongoDatabase _database;
+        public readonly IMongoDatabase _database;
         private readonly IServiceCollection _serviceCollection = new ServiceCollection();
         private IServiceProvider _serviceProvider;
 
@@ -74,7 +72,6 @@ namespace MongoODM
             serviceCollection.AddSingleton<ITypeInitializer, TypeInitializer>();
             serviceCollection.AddSingleton<IMongoDatabase>(this._database);
             serviceCollection.AddSingleton<MongoDbContext>(this);
-            serviceCollection.AddSingleton<IModelSerializer<BsonDocument>, ModelSerializer>();
             serviceCollection.AddSingleton<IClassMapper, ClassMapper>();
             serviceCollection.AddSingleton<IQueryInitializer, QueryInitializer>();
         }
