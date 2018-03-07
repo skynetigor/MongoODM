@@ -25,7 +25,7 @@ namespace MongoODM.ItemsSets
         private readonly IIncludableEnumerable<TEntity> _includable;
         private readonly MethodInfo _setRelationsMethod;
 
-        public MongoDbModelsProvider(IMongoDatabase database, MongoDbContext context)
+        public MongoDbModelsProvider(IMongoDatabase database, MongoDbContext context, IModelSerializer<BsonDocument> serializer)
         {
             this._database = database;
             this._typeInitializer = new TypeInitializer();
@@ -39,6 +39,7 @@ namespace MongoODM.ItemsSets
             this._context = context;
             this._includable = new IncludableEnumerable<TEntity>(database, _typeInitializer);
             this._setRelationsMethod = this.GetType().GetMethod(nameof(this.SetRelations), BindingFlags.NonPublic | BindingFlags.Instance);
+            this._serializer = serializer;
         }
 
         public void InitializeQuery()
@@ -80,29 +81,29 @@ namespace MongoODM.ItemsSets
                 return;
             }
 
-            this._database.GetCollection<TEntity>(_currentTypeModel.CollectionName).InsertOne(entity);
+            this._database.GetCollection<BsonDocument>(_currentTypeModel.CollectionName).InsertOne(_serializer.Serialize(entity));
         }
 
         public void AddRange(IEnumerable<TEntity> entities)
         {
-            var insertableList = new List<TEntity>();
+            var insertableList = new List<BsonDocument>();
             var packageCount = 100;
             var currentCount = 0;
 
             foreach (TEntity entity in entities)
             {
-                insertableList.Add(entity);
+                insertableList.Add(entity.ToBsonDocument());
 
                 if (currentCount % packageCount == 0)
                 {
-                    this._database.GetCollection<TEntity>(_currentTypeModel.CollectionName).InsertMany(insertableList);
+                    this._database.GetCollection<BsonDocument>(_currentTypeModel.CollectionName).InsertMany(insertableList);
                     insertableList.Clear();
                 }
 
                 currentCount++;
             }
 
-            this._database.GetCollection<TEntity>(_currentTypeModel.CollectionName).InsertMany(insertableList);
+            this._database.GetCollection<BsonDocument>(_currentTypeModel.CollectionName).InsertMany(insertableList);
         }
 
         public void Update(TEntity entity)

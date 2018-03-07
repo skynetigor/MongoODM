@@ -67,7 +67,7 @@ namespace MongoODM.Includables
 
         public IQueryable<TEntity> AsQueryable()
         {
-            return this.AsQueryable(null);
+            return this.database.GetCollection<TEntity>(this.currentTypeModel.CollectionName).AsQueryable();
         }
 
         public IQueryable<TEntity> Include()

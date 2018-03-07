@@ -5,6 +5,8 @@ using System;
 using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using MongoODM.Extensions;
+using MongoDB.Bson;
+using MongoODM.Serializers;
 
 namespace MongoODM
 {
@@ -69,11 +71,12 @@ namespace MongoODM
 
         protected virtual void ConfigureServices(IServiceCollection serviceCollection)
         {
-            serviceCollection.AddSingleton<ITypeInitializer, TypeInitializer>();
-            serviceCollection.AddSingleton<IMongoDatabase>(this._database);
-            serviceCollection.AddSingleton<MongoDbContext>(this);
-            serviceCollection.AddSingleton<IClassMapper, ClassMapper>();
-            serviceCollection.AddSingleton<IQueryInitializer, QueryInitializer>();
+            serviceCollection.AddSingleton<ITypeInitializer, TypeInitializer>()
+                .AddSingleton<IMongoDatabase>(this._database)
+                .AddSingleton<MongoDbContext>(this)
+                .AddSingleton<IClassMapper, ClassMapper>()
+                .AddSingleton<IQueryInitializer, QueryInitializer>()
+                .AddSingleton<IModelSerializer<BsonDocument>, NewModelSerializer>();
         }
 
     }

@@ -24,10 +24,11 @@ namespace MongoODM.Serializers
             var thisTypeModel = this._typeInitializer.InitializeType<TEntity>();
 
             var entType = thisTypeModel.CurrentType;
-            var id = thisTypeModel.IdProperty.GetValue(entity).ToString();
+            var id = this.GetId(thisTypeModel.IdProperty, entity);
+
             var document = new BsonDocument
             {
-                {MongoIdProperty, id}
+                {MongoIdProperty, id.ToString()}
             };
 
             foreach (var prop in entType.GetProperties().Where(p => p.Name != thisTypeModel.IdProperty.Name))
@@ -68,6 +69,27 @@ namespace MongoODM.Serializers
         public IEnumerable<BsonDocument> Serialize<TEntity>(IEnumerable<TEntity> entities) where TEntity : class
         {
             return entities.Select(this.Serialize<TEntity>);
+        }
+
+        private object GetId(PropertyInfo idProperty, object obj)
+        {
+            object idValue = idProperty.GetValue(obj);
+
+            if (idValue == null)
+            {
+                if (idProperty.PropertyType == typeof(string))
+                {
+                    var id = ObjectId.GenerateNewId().ToString();
+                    idProperty.SetValue(obj, id);
+                    return id;
+                }
+                else if (idProperty.PropertyType == typeof(ObjectId))
+                {
+                    return ObjectId.GenerateNewId();
+                }
+            }
+
+            return idValue;
         }
     }
 }

@@ -30,14 +30,13 @@ namespace MongoODM.Helpers
                     .GetMethod("BuildPlan", BindingFlags.Public | BindingFlags.Static);
             }
 
-            var modelvalue = (AggregateQueryableExecutionModel<T>)ModelField.GetValue(translation);
+            var modelvalue = ModelField.GetValue(translation);
 
-            if (StagesField == null)
-            {
-                StagesField = modelvalue.GetPrivateField("_stages");
-            }
+            StagesField = modelvalue.GetPrivateField("_stages");
 
-            StagesField.SetValue(modelvalue, pipeline.Concat(modelvalue.Stages).ToList().AsReadOnly());
+            var b = pipeline.Concat((IEnumerable<BsonDocument>)StagesField.GetValue(modelvalue)).ToList().AsReadOnly();
+
+            StagesField.SetValue(modelvalue, b);
 
             return (Expression)BuildPlanMethod.Invoke(null, new object[] { provider, translation });
         }
