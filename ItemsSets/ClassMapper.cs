@@ -13,21 +13,21 @@ namespace MongoODM.ItemsSets
     internal class ClassMapper : IClassMapper
     {
         private readonly ITypeInitializer _typeInitializer;
-        private readonly MethodInfo _mapClassGenericMethod;
+        private MethodInfo _mapClassGenericMethod;
+        private IBsonSerializationProvider SerializationProvider;
 
-        public ClassMapper(ITypeInitializer typeInitializer)
+        public ClassMapper(ITypeInitializer typeInitializer, IBsonSerializationProvider provider)
         {
             this._typeInitializer = typeInitializer;
-            this._mapClassGenericMethod = this.GetMethods()
-                .FirstOrDefault(m => m.Name == nameof(this.MapClass));
+            this.SerializationProvider = provider;
         }
 
         public void MapClass<T>()
         {
             var type = typeof(T);
-            BsonSerializer.RegisterSerializer<ICollection<T>>(new TrackingICollectionSerializer<T>());
-            BsonSerializer.RegisterSerializer<IList<T>>(new TrackingIListSerializer<T>());
-            //BsonSerializer.RegisterSerializer<T>(new ModelsSerializer<T>(this._typeInitializer));
+            var typeModel = this._typeInitializer.GetTypeMetadata(type);
+
+            BsonSerializer.RegisterSerializationProvider(this.SerializationProvider);
 
             if (!BsonClassMap.IsClassMapRegistered(type))
             {
@@ -38,19 +38,37 @@ namespace MongoODM.ItemsSets
                           cm.SetIgnoreExtraElements(true);
                           foreach (var prop in type.GetProperties())
                           {
-                              if (prop.PropertyType.Name == typeof(ICollection<>).Name || prop.PropertyType.Name == typeof(IList<>).Name)
+                              if ((prop.PropertyType == typeof(ICollection<T>) || prop.PropertyType == typeof(IList<T>)) 
+                                  && this._typeInitializer.GetTypeMetadata(prop.PropertyType.GetGenericArguments()[0]) != null)
                               {
-                                  var genericType = prop.PropertyType.GetGenericArguments()[0];
-                                  var trackingListType = typeof(TrackingList<>).MakeGenericType(genericType);
-                                  cm.MapProperty(prop.Name).SetDefaultValue(() => Activator.CreateInstance(trackingListType));
+                                  BsonMemberMap collectionMemberMap = cm.MapProperty(prop.Name);
+                                  collectionMemberMap.SetDefaultValue(() => new TrackingList<T>());
+
+                                  if (prop.PropertyType == typeof(ICollection<T>))
+                                  {
+                                      collectionMemberMap.SetSerializer(new TrackingICollectionSerializer<T>());
+                                  }
+                                  else
+                                  {
+                                      collectionMemberMap.SetSerializer(new TrackingIListSerializer<T>());
+                                  }
                               }
                           }
                       });
+
+                BsonSerializer.RegisterSerializer<T>(new ModelsSerializer<T>(this._typeInitializer));
             }
+
         }
 
         public void MapClass(Type type)
         {
+            if (this._mapClassGenericMethod == null)
+            {
+                this._mapClassGenericMethod = this.GetMethods()
+                    .FirstOrDefault(m => m.Name == nameof(this.MapClass));
+            }
+
             this._mapClassGenericMethod.MakeGenericMethod(type).Invoke(this, null);
         }
     }

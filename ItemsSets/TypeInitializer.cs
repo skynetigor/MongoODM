@@ -11,37 +11,34 @@ namespace MongoODM.ItemsSets
     internal class TypeInitializer : ITypeInitializer
     {
         const string CollectionPostfix = "s";
-        private static Dictionary<Type, TypeModel> dictionary = new Dictionary<Type, TypeModel>();
 
-        public TypeModel InitializeType<T>()
+        private Dictionary<Type, TypeMetadata> DictionaryTypeMetadata { get; } = new Dictionary<Type, TypeMetadata>();
+
+        public TypeMetadata RegisterType<T>()
         {
-            return this.InitializeType(typeof(T));
+            return this.RegisterType(typeof(T));
         }
 
-        public TypeModel InitializeType(Type type)
+        public TypeMetadata RegisterType(Type type)
         {
-            TypeModel typeModel;
-
-            if (!dictionary.TryGetValue(type, out typeModel))
+            if (!DictionaryTypeMetadata.TryGetValue(type, out var typeModel))
             {
                 typeModel = Setup(type);
                 typeModel.CurrentType = type;
-                dictionary[type] = typeModel;
+                DictionaryTypeMetadata[type] = typeModel;
             }
 
             return typeModel;
         }
 
-        public TypeModel GetTypeModel<T>()
+        public TypeMetadata GetTypeMetadata<T>()
         {
-            return this.GetTypeModel(typeof(T));
+            return this.GetTypeMetadata(typeof(T));
         }
 
-        public TypeModel GetTypeModel(Type type)
+        public TypeMetadata GetTypeMetadata(Type type)
         {
-            TypeModel typeModel;
-
-            if (!dictionary.TryGetValue(type, out typeModel))
+            if (!DictionaryTypeMetadata.TryGetValue(type, out var typeModel))
             {
                 return null;
             }
@@ -49,9 +46,9 @@ namespace MongoODM.ItemsSets
             return typeModel;
         }
 
-        private TypeModel Setup(Type type)
+        private TypeMetadata Setup(Type type)
         {
-            var model = new TypeModel();
+            var model = new TypeMetadata();
 
             var attributes = type.GetCustomAttributes<AbstractORMAttribute>();
 
@@ -65,7 +62,7 @@ namespace MongoODM.ItemsSets
             return model;
         }
 
-        private void SetProperties(Type type, TypeModel model)
+        private void SetProperties(Type type, TypeMetadata model)
         {
             if (string.IsNullOrEmpty(model.CollectionName))
             {

@@ -8,7 +8,7 @@ namespace MongoODM.Attributes
 
     public class KeyNameAttribute : AbstractORMAttribute
     {
-        protected override void Map(TypeModel model, Type currentType)
+        protected override void Map(TypeMetadata model, Type currentType)
         {
             model.IdProperty = currentType.GetProperties().FirstOrDefault(p => p.GetCustomAttributes(typeof(KeyNameAttribute), false) != null);
         }

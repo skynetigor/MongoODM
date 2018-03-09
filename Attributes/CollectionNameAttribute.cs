@@ -9,7 +9,7 @@ namespace MongoODM.Attributes
     {
         public string Name { get; set; }
 
-        protected override void Map(TypeModel model, Type currentType)
+        protected override void Map(TypeMetadata model, Type currentType)
         {
             model.CollectionName = Name;
         }

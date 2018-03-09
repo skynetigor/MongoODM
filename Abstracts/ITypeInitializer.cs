@@ -5,12 +5,12 @@ namespace MongoODM.Abstracts
 {
     public interface ITypeInitializer
     {
-        TypeModel GetTypeModel<T>();
+        TypeMetadata GetTypeMetadata<T>();
 
-        TypeModel GetTypeModel(Type type);
+        TypeMetadata GetTypeMetadata(Type type);
 
-        TypeModel InitializeType<T>();
+        TypeMetadata RegisterType<T>();
 
-        TypeModel InitializeType(Type type);
+        TypeMetadata RegisterType(Type type);
     }
 }

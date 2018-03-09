@@ -17,13 +17,13 @@ namespace MongoODM.Includables
         private IMongoDatabase database;
         private ITypeInitializer typeInitializer;
 
-        private TypeModel currentTypeModel;
+        private TypeMetadata currentTypeModel;
 
         public IncludableEnumerable(IMongoDatabase database, ITypeInitializer typeInitializer)
         {
             this.database = database;
             this.typeInitializer = typeInitializer;
-            this.currentTypeModel = this.typeInitializer.GetTypeModel<TEntity>();
+            this.currentTypeModel = this.typeInitializer.GetTypeMetadata<TEntity>();
         }
 
         public IQueryable<TEntity> Include(params Expression<Func<TEntity, object>>[] navigationPropsPath)

@@ -1,24 +1,30 @@
-﻿using MongoDB.Bson;
+﻿using System;
+using MongoDB.Bson;
 using MongoODM.Abstracts;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace MongoODM.ItemsSets
 {
     internal class QueryInitializer : IQueryInitializer
     {
-        public ITypeInitializer typeInitializer;
+        public ITypeInitializer TypeInitializer { get; }
 
         public QueryInitializer(ITypeInitializer typeInitializer)
         {
-            this.typeInitializer = typeInitializer;
+            this.TypeInitializer = typeInitializer;
         }
 
         public void Initialize<T>()
         {
-            var typeModelThis = this.typeInitializer.GetTypeModel<T>();
-            //var docList = new List<BsonDocument>();
-            var thisType = typeof(T);
-            foreach (var prop in thisType.GetProperties())
+            this.Initialize(typeof(T));
+        }
+
+        public void Initialize(Type type)
+        {
+            var typeMetadata = this.TypeInitializer.GetTypeMetadata(type);
+
+            foreach (var prop in type.GetProperties())
             {
                 var propType = prop.PropertyType;
                 if (propType.IsClass && propType != typeof(string) || propType.IsInterface)
@@ -27,19 +33,19 @@ namespace MongoODM.ItemsSets
                     if (propType.Name == typeof(ICollection<>).Name || propType.Name == typeof(IEnumerable<>).Name)
                     {
                         var gerType = propType.GetGenericArguments()[0];
-                        var tmodel = this.typeInitializer.GetTypeModel(gerType);
+                        var currentTypeMetadata = this.TypeInitializer.GetTypeMetadata(gerType);
                         lookUp["$lookup"] = new BsonDocument
                         {
-                           { "from", tmodel.CollectionName },
+                           { "from", currentTypeMetadata.CollectionName },
                            { "localField", "_id" },
-                           { "foreignField", thisType.Name + "Id"},
+                           { "foreignField", type.Name + "Id"},
                            {"as", prop.Name }
                         };
-                        typeModelThis.QueryDictionary[prop.Name] = new[] { lookUp };
+                        typeMetadata.QueryDictionary[prop.Name] = new[] { lookUp };
                     }
                     else
                     {
-                        var tmodel = this.typeInitializer.GetTypeModel(propType);
+                        var tmodel = this.TypeInitializer.GetTypeMetadata(propType);
                         lookUp["$lookup"] = new BsonDocument
                         {
                            { "from", tmodel.CollectionName },
@@ -54,8 +60,7 @@ namespace MongoODM.ItemsSets
                             { "path", $"${prop.Name}" },
                             { "preserveNullAndEmptyArrays", true }
                         };
-                        typeModelThis.QueryDictionary[prop.Name] = new[] { lookUp, unwind };
-
+                        typeMetadata.QueryDictionary[prop.Name] = new[] { lookUp, unwind };
                     }
                 }
             }

@@ -6,13 +6,14 @@ using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using MongoODM.Extensions;
 using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
 using MongoODM.Serializers;
 
 namespace MongoODM
 {
     public abstract class MongoDbContext
     {
-        public readonly IMongoDatabase _database;
+        private readonly IMongoDatabase _database;
         private readonly IServiceCollection _serviceCollection = new ServiceCollection();
         private IServiceProvider _serviceProvider;
 
@@ -41,27 +42,25 @@ namespace MongoODM
 
             foreach (var prop in items)
             {
-                this._serviceCollection.AddSingleton(MakeGenericTypeModelsProviderInterface(prop.PropertyType), MakeGenericTypeModelsProviderImplementation(prop.PropertyType));
+                this._serviceCollection.AddSingleton(prop.PropertyType, MakeGenericTypeModelsProviderImplementation(prop.PropertyType));
             }
 
             this._serviceProvider = this._serviceCollection.BuildServiceProvider();
 
+            IClassMapper classMapper = this._serviceProvider.GetService<IClassMapper>();
+            IQueryInitializer queryInitializer = this._serviceProvider.GetService<IQueryInitializer>();
+
             foreach (var prop in items)
             {
-                prop.SetValue(this, this._serviceProvider.GetService(MakeGenericTypeModelsProviderInterface(prop.PropertyType)));
+                prop.SetValue(this, this._serviceProvider.GetService(prop.PropertyType));
             }
 
             foreach (var prop in items)
             {
-                var val = prop.GetValue(this);
-                var queryMethod = val.GetType().GetMethod("InitializeQuery");
-                queryMethod.Invoke(val, null);
+                var propertyGenericType = prop.PropertyType.GetGenericArguments()[0];
+                classMapper.MapClass(propertyGenericType);
+                queryInitializer.Initialize(propertyGenericType);
             }
-        }
-
-        private Type MakeGenericTypeModelsProviderInterface(Type argument)
-        {
-            return typeof(IModelsProvider<>).MakeGenericType(argument.GetGenericArguments()[0]);
         }
 
         private Type MakeGenericTypeModelsProviderImplementation(Type argument)
@@ -76,7 +75,9 @@ namespace MongoODM
                 .AddSingleton<MongoDbContext>(this)
                 .AddSingleton<IClassMapper, ClassMapper>()
                 .AddSingleton<IQueryInitializer, QueryInitializer>()
-                .AddSingleton<IModelSerializer<BsonDocument>, NewModelSerializer>();
+                .AddSingleton<IBsonSerializationProvider, SerializationProvider>()
+                .AddTransient<IClassMapper, ClassMapper>()
+                .AddTransient<IQueryInitializer, QueryInitializer>();
         }
 
     }

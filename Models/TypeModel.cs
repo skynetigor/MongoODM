@@ -5,9 +5,9 @@ using System.Reflection;
 
 namespace MongoODM.Models
 {
-    public class TypeModel
+    public class TypeMetadata
     {
-        public TypeModel()
+        public TypeMetadata()
         {
             this.QueryDictionary = new Dictionary<string, IEnumerable<BsonDocument>>();
         }

@@ -34,7 +34,14 @@ namespace MongoODM.Helpers
 
             StagesField = modelvalue.GetPrivateField("_stages");
 
+            
+
             var b = pipeline.Concat((IEnumerable<BsonDocument>)StagesField.GetValue(modelvalue)).ToList().AsReadOnly();
+
+            if (typeof(T).Name == "Message")
+            {
+
+            }
 
             StagesField.SetValue(modelvalue, b);
 

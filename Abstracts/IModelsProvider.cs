@@ -6,8 +6,6 @@ namespace MongoODM.Abstracts
     public interface IModelsProvider<TEntity> : IEnumerable<TEntity>, IIncludableEnumerable<TEntity>
         where TEntity: class
     {
-        void InitializeQuery();
-
         void Add(TEntity entity);
 
         void AddRange(IEnumerable<TEntity> entities);

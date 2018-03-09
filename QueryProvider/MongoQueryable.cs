@@ -22,10 +22,10 @@ namespace MongoODM.QueryProvider
         public IQueryProvider Provider { get; }
 
 
-        public MongoQueryable(IQueryable<T> queryProvider, IList<BsonDocument> pipeLine)
+        public MongoQueryable(IQueryable<T> queryable, IList<BsonDocument> pipeLine)
         {
-            this.Provider = new MongoQueryProvider<T>(queryProvider.Provider, pipeLine);
-            this.Expression = queryProvider.Expression;
+            this.Provider = new MongoQueryProvider<T>(queryable.Provider, pipeLine);
+            this.Expression = queryable.Expression;
         }
 
         public MongoQueryable(IQueryProvider provider, Expression expression)
