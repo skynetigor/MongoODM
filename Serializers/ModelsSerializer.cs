@@ -59,15 +59,19 @@ namespace MongoODM.Serializers
             {
                 object propertyValue = prop.GetValue(value);
 
-                if (prop == entityTypeModel.IdProperty && propertyValue == null)
+                if (prop == entityTypeModel.IdProperty)
                 {
-                    var id = this.GetId(entityTypeModel.IdProperty, value);
-
-                    if (id != null)
+                    if (propertyValue == null)
                     {
-                        entityTypeModel.IdProperty.SetValue(value, id);
-                        bsonWriter.WriteName(MongoIdProperty);
-                        BsonSerializer.LookupSerializer(entityTypeModel.IdProperty.PropertyType).Serialize(context, id);
+                        var id = this.GetId(entityTypeModel.IdProperty);
+
+                        if (id != null)
+                        {
+                            entityTypeModel.IdProperty.SetValue(value, id);
+                            bsonWriter.WriteName(MongoIdProperty);
+                            BsonSerializer.LookupSerializer(entityTypeModel.IdProperty.PropertyType)
+                                .Serialize(context, id);
+                        }
                     }
                 }
                 else if (prop.PropertyType.Name == typeof(ICollection<>).Name ||
@@ -78,7 +82,7 @@ namespace MongoODM.Serializers
                 else if (this._typeInitializer.GetTypeMetadata(prop.PropertyType) != null)
                 {
                     var propTypeModel = this._typeInitializer.GetTypeMetadata(prop.PropertyType);
-                    var idValue = this.GetId(propTypeModel.IdProperty, propertyValue);
+                    var idValue = propTypeModel.IdProperty.GetValue(propertyValue);
 
                     if (idValue != null)
                     {
@@ -124,10 +128,8 @@ namespace MongoODM.Serializers
             return false;
         }
 
-        private object GetId(PropertyInfo idProperty, object obj)
+        private object GetId(PropertyInfo idProperty)
         {
-            object idValue = idProperty.GetValue(obj);
-
             if (idProperty.PropertyType == typeof(string))
             {
                 return ObjectId.GenerateNewId().ToString();

@@ -25,7 +25,6 @@ namespace MongoODM.ItemsSets
         public void MapClass<T>()
         {
             var type = typeof(T);
-            var typeModel = this._typeInitializer.GetTypeMetadata(type);
 
             BsonSerializer.RegisterSerializationProvider(this.SerializationProvider);
 
@@ -38,19 +37,25 @@ namespace MongoODM.ItemsSets
                           cm.SetIgnoreExtraElements(true);
                           foreach (var prop in type.GetProperties())
                           {
-                              if ((prop.PropertyType == typeof(ICollection<T>) || prop.PropertyType == typeof(IList<T>)) 
+                              if ((prop.PropertyType.Name == typeof(ICollection<>).Name || prop.PropertyType.Name == typeof(IList<>).Name) //Needs to be refactored
                                   && this._typeInitializer.GetTypeMetadata(prop.PropertyType.GetGenericArguments()[0]) != null)
                               {
                                   BsonMemberMap collectionMemberMap = cm.MapProperty(prop.Name);
-                                  collectionMemberMap.SetDefaultValue(() => new TrackingList<T>());
+                                  var genericType = prop.PropertyType.GetGenericArguments()[0];
+                                  var trackingListType = typeof(TrackingList<>).MakeGenericType(genericType);
+                                  cm.MapProperty(prop.Name).SetDefaultValue(() => Activator.CreateInstance(trackingListType));
 
-                                  if (prop.PropertyType == typeof(ICollection<T>))
+                                  if (prop.PropertyType.Name == typeof(ICollection<>).Name)
                                   {
-                                      collectionMemberMap.SetSerializer(new TrackingICollectionSerializer<T>());
+                                      var collectionSerializer =
+                                          typeof(TrackingICollectionSerializer<>).MakeGenericType(genericType);
+                                      collectionMemberMap.SetSerializer((IBsonSerializer)Activator.CreateInstance(collectionSerializer));
                                   }
                                   else
                                   {
-                                      collectionMemberMap.SetSerializer(new TrackingIListSerializer<T>());
+                                      var listSerializer =
+                                          typeof(TrackingIListSerializer<>).MakeGenericType(genericType);
+                                      collectionMemberMap.SetSerializer((IBsonSerializer)Activator.CreateInstance(listSerializer));
                                   }
                               }
                           }
@@ -71,5 +76,6 @@ namespace MongoODM.ItemsSets
 
             this._mapClassGenericMethod.MakeGenericMethod(type).Invoke(this, null);
         }
+
     }
 }
