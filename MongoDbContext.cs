@@ -3,10 +3,13 @@ using MongoODM.Abstracts;
 using MongoODM.ItemsSets;
 using System;
 using System.Linq;
+using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using MongoODM.Extensions;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
+using MongoODM.DI.Abstract;
+using MongoODM.DI.Implementation;
 using MongoODM.Serializers;
 
 namespace MongoODM
@@ -14,8 +17,7 @@ namespace MongoODM
     public abstract class MongoDbContext
     {
         private readonly IMongoDatabase _database;
-        private readonly IServiceCollection _serviceCollection = new ServiceCollection();
-        private IServiceProvider _serviceProvider;
+        private ICustomServiceProvider _serviceProvider;
 
         public bool DropCollectionsWhenContextCreating { get; }
 
@@ -31,29 +33,29 @@ namespace MongoODM
         public IModelsProvider<T> Set<T>()
             where T : class
         {
-            return this._serviceProvider.GetService<IModelsProvider<T>>();
+           var modelsProvider = this.GetType().GetProperties().FirstOrDefault(prop => prop.PropertyType == typeof(IModelsProvider<T>));
+
+            return modelsProvider != null ? (IModelsProvider<T>)modelsProvider.GetValue(this) : null;
         }
 
         private void Setup()
         {
-            this.ConfigureServices(this._serviceCollection);
+            ICustomServiceCollection serviceCollection = new CustomServiceCollection();
+            this.ConfigureServices(serviceCollection);
+            this._serviceProvider = serviceCollection.BuildServiceProvider();
 
-            var items = this.GetProperties().Where(p =>  p.PropertyType.Name == (typeof(IModelsProvider<>).Name));
+            var items = this.GetProperties().Where(p => p.PropertyType.Name == (typeof(IModelsProvider<>).Name));
 
             foreach (var prop in items)
             {
-                this._serviceCollection.AddSingleton(prop.PropertyType, MakeGenericTypeModelsProviderImplementation(prop.PropertyType));
+                var instance = _serviceProvider.CreateInstance(MakeGenericTypeModelsProviderImplementation(prop.PropertyType));
+                prop.SetValue(this, instance);
+                //serviceCollection.AddSingleton(prop.PropertyType, MakeGenericTypeModelsProviderImplementation(prop.PropertyType));
             }
 
-            this._serviceProvider = this._serviceCollection.BuildServiceProvider();
 
             IClassMapper classMapper = this._serviceProvider.GetService<IClassMapper>();
             IQueryInitializer queryInitializer = this._serviceProvider.GetService<IQueryInitializer>();
-
-            foreach (var prop in items)
-            {
-                prop.SetValue(this, this._serviceProvider.GetService(prop.PropertyType));
-            }
 
             foreach (var prop in items)
             {
@@ -73,8 +75,6 @@ namespace MongoODM
             serviceCollection.AddSingleton<ITypeInitializer, TypeInitializer>()
                 .AddSingleton<IMongoDatabase>(this._database)
                 .AddSingleton<MongoDbContext>(this)
-                .AddSingleton<IClassMapper, ClassMapper>()
-                .AddSingleton<IQueryInitializer, QueryInitializer>()
                 .AddSingleton<IBsonSerializationProvider, SerializationProvider>()
                 .AddTransient<IClassMapper, ClassMapper>()
                 .AddTransient<IQueryInitializer, QueryInitializer>();

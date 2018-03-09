@@ -1,4 +1,6 @@
 ﻿using System;
+using MongoODM.Abstracts;
+using MongoODM.DI.Abstract;
 using MongoODM.Models;
 
 namespace MongoODM.Attributes
@@ -7,9 +9,14 @@ namespace MongoODM.Attributes
 
     public sealed class CollectionNameAttribute : AbstractORMAttribute
     {
+        public CollectionNameAttribute()
+        {
+
+        }
+
         public string Name { get; set; }
 
-        protected override void Map(TypeMetadata model, Type currentType)
+        public override void Map(TypeMetadata model, Type currentType, ICustomServiceProvider serviceProvider)
         {
             model.CollectionName = Name;
         }

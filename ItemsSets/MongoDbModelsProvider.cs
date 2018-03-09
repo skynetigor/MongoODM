@@ -9,6 +9,8 @@ using System.Reflection;
 using MongoODM.Includables;
 using System.Linq.Expressions;
 using System;
+using MongoODM.DI.Abstract;
+using MongoODM.DI.Extensions;
 
 namespace MongoODM.ItemsSets
 {
@@ -22,7 +24,7 @@ namespace MongoODM.ItemsSets
         private IIncludableEnumerable<TEntity> Includable { get; }
         private MethodInfo SetRelationsMethod { get; }
 
-        public MongoDbModelsProvider(IMongoDatabase database, MongoDbContext context, ITypeInitializer typeInitializer)
+        public MongoDbModelsProvider(IMongoDatabase database, MongoDbContext context, ITypeInitializer typeInitializer, ICustomServiceProvider type)
         {
             this.Database = database;
             this.TypeInitializer = typeInitializer;
@@ -34,7 +36,7 @@ namespace MongoODM.ItemsSets
             }
 
             this.Context = context;
-            this.Includable = new IncludableEnumerable<TEntity>(database, TypeInitializer);
+            this.Includable = type.CreateInstance<IncludableEnumerable<TEntity>>();
             this.SetRelationsMethod = this.GetType().GetMethod(nameof(this.SetRelations), BindingFlags.NonPublic | BindingFlags.Instance);
         }
 
@@ -78,7 +80,7 @@ namespace MongoODM.ItemsSets
             {
                 insertableList.Add(entity);
 
-                if (currentCount % packageCount == 0)
+                if (currentCount > 0 && currentCount % packageCount == 0)
                 {
                     this.Database.GetCollection<TEntity>(CurrentTypeModel.CollectionName).InsertMany(insertableList);
                     insertableList.Clear();

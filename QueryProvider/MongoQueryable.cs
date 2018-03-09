@@ -3,24 +3,17 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
 using MongoDB.Bson;
-using MongoDB.Driver;
-using MongoDB.Driver.Linq;
-using MongoODM.Extensions;
 
 namespace MongoODM.QueryProvider
 {
     class MongoQueryable<T> : IQueryable<T>
     {
-
         public Type ElementType => typeof(T);
 
         public Expression Expression { get; }
 
         public IQueryProvider Provider { get; }
-
 
         public MongoQueryable(IQueryable<T> queryable, IList<BsonDocument> pipeLine)
         {

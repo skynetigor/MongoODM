@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using MongoODM.DI.Abstract;
 
 namespace MongoODM.ItemsSets
 {
@@ -13,6 +14,12 @@ namespace MongoODM.ItemsSets
         const string CollectionPostfix = "s";
 
         private Dictionary<Type, TypeMetadata> DictionaryTypeMetadata { get; } = new Dictionary<Type, TypeMetadata>();
+        private ICustomServiceProvider ServiceProvider { get; }
+
+        public TypeInitializer(ICustomServiceProvider serviceProvider)
+        {
+            this.ServiceProvider = serviceProvider;
+        }
 
         public TypeMetadata RegisterType<T>()
         {
@@ -50,12 +57,11 @@ namespace MongoODM.ItemsSets
         {
             var model = new TypeMetadata();
 
-            var attributes = type.GetCustomAttributes<AbstractORMAttribute>();
+            var attributes = type.GetCustomAttributes<AbstractORMAttribute>().OfType<ITypeMetadataInitializer>();
 
             foreach (var attr in attributes)
             {
-                var method = attr.GetType().GetMethod("Map", BindingFlags.NonPublic | BindingFlags.Instance);
-                method.Invoke(attr, new object[] { model, type });
+                attr.Map(model, type, this.ServiceProvider);
             }
 
             this.SetProperties(type, model);

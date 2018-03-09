@@ -6,20 +6,24 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using MongoODM.DI.Abstract;
+using MongoODM.DI.Extensions;
 using MongoODM.Extensions;
 
 namespace MongoODM.ItemsSets
 {
     internal class ClassMapper : IClassMapper
     {
-        private readonly ITypeInitializer _typeInitializer;
         private MethodInfo _mapClassGenericMethod;
-        private IBsonSerializationProvider SerializationProvider;
+        private ITypeInitializer TypeInitializer { get; }
+        private IBsonSerializationProvider SerializationProvider { get; }
+        private ICustomServiceProvider ServiceProvider { get; }
 
-        public ClassMapper(ITypeInitializer typeInitializer, IBsonSerializationProvider provider)
+        public ClassMapper(ITypeInitializer typeInitializer, IBsonSerializationProvider provider, ICustomServiceProvider serviceProvider)
         {
-            this._typeInitializer = typeInitializer;
+            this.TypeInitializer = typeInitializer;
             this.SerializationProvider = provider;
+            this.ServiceProvider = serviceProvider;
         }
 
         public void MapClass<T>()
@@ -38,30 +42,30 @@ namespace MongoODM.ItemsSets
                           foreach (var prop in type.GetProperties())
                           {
                               if ((prop.PropertyType.Name == typeof(ICollection<>).Name || prop.PropertyType.Name == typeof(IList<>).Name) //Needs to be refactored
-                                  && this._typeInitializer.GetTypeMetadata(prop.PropertyType.GetGenericArguments()[0]) != null)
+                                  && this.TypeInitializer.GetTypeMetadata(prop.PropertyType.GetGenericArguments()[0]) != null)
                               {
                                   BsonMemberMap collectionMemberMap = cm.MapProperty(prop.Name);
                                   var genericType = prop.PropertyType.GetGenericArguments()[0];
                                   var trackingListType = typeof(TrackingList<>).MakeGenericType(genericType);
-                                  cm.MapProperty(prop.Name).SetDefaultValue(() => Activator.CreateInstance(trackingListType));
+                                  cm.MapProperty(prop.Name).SetDefaultValue(() => this.ServiceProvider.CreateInstance(trackingListType));
 
                                   if (prop.PropertyType.Name == typeof(ICollection<>).Name)
                                   {
                                       var collectionSerializer =
                                           typeof(TrackingICollectionSerializer<>).MakeGenericType(genericType);
-                                      collectionMemberMap.SetSerializer((IBsonSerializer)Activator.CreateInstance(collectionSerializer));
+                                      collectionMemberMap.SetSerializer((IBsonSerializer)this.ServiceProvider.CreateInstance(collectionSerializer));
                                   }
                                   else
                                   {
                                       var listSerializer =
                                           typeof(TrackingIListSerializer<>).MakeGenericType(genericType);
-                                      collectionMemberMap.SetSerializer((IBsonSerializer)Activator.CreateInstance(listSerializer));
+                                      collectionMemberMap.SetSerializer((IBsonSerializer)this.ServiceProvider.CreateInstance(listSerializer));
                                   }
                               }
                           }
                       });
 
-                BsonSerializer.RegisterSerializer<T>(new ModelsSerializer<T>(this._typeInitializer));
+                BsonSerializer.RegisterSerializer<T>(this.ServiceProvider.CreateInstance<ModelsSerializer<T>>());
             }
 
         }

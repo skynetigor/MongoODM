@@ -1,16 +1,17 @@
 ﻿using MongoDB.Bson.Serialization.Serializers;
-using System;
 using System.Collections.Generic;
-using System.Text;
 using MongoDB.Bson.Serialization;
-using MongoDB.Bson;
 using MongoODM.Models;
-using System.Collections;
 
 namespace MongoODM.Serializers
 {
     internal class TrackingICollectionSerializer<T> : SerializerBase<ICollection<T>>
     {
+        public TrackingICollectionSerializer()
+        {
+            
+        }
+
         public override ICollection<T> Deserialize(BsonDeserializationContext context, BsonDeserializationArgs args)
         {
             ArraySerializer<T> ser = new ArraySerializer<T>();
