@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
-using MongoODM.DI.Abstract;
+using DbdocFramework.DI.Abstract;
 
-namespace MongoODM.DI.Implementation
+namespace DbdocFramework.DI.Implementation
 {
     internal class CustomServiceProvider: ICustomServiceProvider
     {

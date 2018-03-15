@@ -1,13 +1,13 @@
-﻿using MongoODM.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using MongoODM.Abstracts;
-using MongoODM.DI.Abstract;
+using DbdocFramework.Abstracts;
+using DbdocFramework.DI.Abstract;
+using DbdocFramework.MongoDbProvider.Models;
 
-namespace MongoODM.Attributes
+namespace DbdocFramework.Attributes
 {
-    public abstract class AbstractORMAttribute : Attribute, ITypeMetadataInitializer
+    public abstract class AbstractORMAttribute : Attribute, ITypeMetadata
     {
         public abstract void Map(TypeMetadata model, Type currentType, ICustomServiceProvider serviceProvider);
     }

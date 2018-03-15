@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace MongoODM.DI.Abstract
+namespace DbdocFramework.DI.Abstract
 {
     interface ICustomServiceCollection: IServiceCollection
     {

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Reflection;
 
-namespace MongoODM.Extensions
+namespace DbdocFramework.Extensions
 {
     internal static class  ObjectExtensions
     {

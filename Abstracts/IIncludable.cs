@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
-namespace MongoODM.Abstracts
+namespace DbdocFramework.Abstracts
 {
-    public interface IIncludableEnumerable<TEntity>
+    public interface IIncludableEnumerable<TEntity> where TEntity: class 
     {
         IQueryable<TEntity> Include();
 

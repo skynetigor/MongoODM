@@ -1,6 +1,7 @@
 ﻿using System;
+using DbdocFramework.Abstracts;
 
-namespace MongoODM.DI.Abstract
+namespace DbdocFramework.DI.Abstract
 {
     public interface ICustomServiceProvider: IServiceProvider
     {

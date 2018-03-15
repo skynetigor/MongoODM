@@ -1,8 +1,8 @@
 ﻿using System;
 using Microsoft.Extensions.DependencyInjection;
-using MongoODM.DI.Abstract;
+using DbdocFramework.DI.Abstract;
 
-namespace MongoODM.DI.Implementation
+namespace DbdocFramework.DI.Implementation
 {
     internal class CustomServiceCollection: ServiceCollection, ICustomServiceCollection
     {

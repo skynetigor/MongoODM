@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using MongoODM.DI.Abstract;
+using DbdocFramework.DI.Abstract;
 
-namespace MongoODM.DI.Extensions
+namespace DbdocFramework.DI.Extensions
 {
     public  static class ICustomServiceProviderExtensions
     {

@@ -1,9 +1,9 @@
 ﻿using System;
-using MongoODM.Abstracts;
-using MongoODM.DI.Abstract;
-using MongoODM.Models;
+using DbdocFramework.Abstracts;
+using DbdocFramework.DI.Abstract;
+using DbdocFramework.MongoDbProvider.Models;
 
-namespace MongoODM.Attributes
+namespace DbdocFramework.Attributes
 {
     [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = true)]
 
