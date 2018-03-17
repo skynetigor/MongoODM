@@ -3,12 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using DbdocFramework.Abstracts.Queryable;
-using MongoDB.Bson;
 
-namespace DbdocFramework.MongoDbProvider.QueryProvider
+namespace DbdocFramework.MongoDbProvider.QueryProviders
 {
-    class MongoQueryable<T> : IQueryable<T>
+    class MongoDbQueryable<T>: IQueryable<T>
     {
         public Type ElementType => typeof(T);
 
@@ -16,7 +14,7 @@ namespace DbdocFramework.MongoDbProvider.QueryProvider
 
         public IQueryProvider Provider { get; }
 
-        public MongoQueryable(IQueryProvider provider, Expression expression)
+        public MongoDbQueryable(IQueryProvider provider, Expression expression)
         {
             this.Provider = provider;
             this.Expression = expression;
@@ -24,7 +22,7 @@ namespace DbdocFramework.MongoDbProvider.QueryProvider
 
         public IEnumerator<T> GetEnumerator()
         {
-            return ((IEnumerable<T>) this.Provider.Execute(this.Expression)).GetEnumerator();
+            return ((IEnumerable<T>)this.Provider.Execute(this.Expression)).GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()

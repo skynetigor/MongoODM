@@ -1,10 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using DbdocFramework.Abstracts.Queryable;
 
 namespace DbdocFramework.Abstracts
 {
-    public interface IDbSet<TEntity> : IEnumerable<TEntity>, IIncludableEnumerable<TEntity>
+    public interface IDbSet<TEntity>
         where TEntity: class
     {
         void Add(TEntity entity);
@@ -19,6 +18,8 @@ namespace DbdocFramework.Abstracts
 
         void RemoveRange(IEnumerable<TEntity> entities);
 
-        ILazyLoadingQueryable<TEntity> UseLazyLoading();
+        IIncludableQueryable<TEntity> UseLazyLoading();
+
+        IIncludableQueryable<TEntity> UseEagerLoading();
     }
 }

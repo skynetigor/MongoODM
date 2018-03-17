@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 
 namespace DbdocFramework.Extensions
@@ -13,6 +15,11 @@ namespace DbdocFramework.Extensions
         public static PropertyInfo GetProperty(this object obj, string propertyName)
         {
             return obj.GetType().GetProperty(propertyName);
+        }
+
+        public static PropertyInfo GetPropertyIgnoreCase(this object obj, string propertyName)
+        {
+            return obj.GetType().GetProperties().FirstOrDefault(p => p.Name.Equals(propertyName, StringComparison.CurrentCultureIgnoreCase));
         }
 
         public static PropertyInfo GetPrivateProperty(this object obj, string propertyName)

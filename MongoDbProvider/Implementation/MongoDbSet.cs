@@ -7,7 +7,6 @@ using System.Reflection;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using DbdocFramework.Abstracts;
-using DbdocFramework.Abstracts.Queryable;
 using DbdocFramework.DI.Abstract;
 using DbdocFramework.MongoDbProvider.Abstracts;
 using DbdocFramework.MongoDbProvider.Models;
@@ -22,39 +21,17 @@ namespace DbdocFramework.MongoDbProvider.Implementation
         private ITypeInitializer TypeInitializer { get; }
         private TypeMetadata CurrentTypeModel { get; }
         private IDbsetContainer DbsetContainer { get; }
-        private IIncludableEnumerable<TEntity> Includable { get; }
         private MethodInfo SetRelationsMethod { get; }
         private ICustomServiceProvider ServiceProvider { get; }
 
-        public MongoDbSet(IMongoDatabase database, IDbsetContainer dbsetContainer,ITypeInitializer typeInitializer, ICustomServiceProvider serviceProvider, IIncludableEnumerable<TEntity> includableEnumerable)
+        public MongoDbSet(IMongoDatabase database, IDbsetContainer dbsetContainer,ITypeInitializer typeInitializer, ICustomServiceProvider serviceProvider)
         {
             this.Database = database;
             this.TypeInitializer = typeInitializer;
             this.CurrentTypeModel = TypeInitializer.RegisterType<TEntity>();
             this.ServiceProvider = serviceProvider;
             this.DbsetContainer = dbsetContainer;
-            this.Includable = includableEnumerable;
             this.SetRelationsMethod = this.GetType().GetMethod(nameof(this.SetRelations), BindingFlags.NonPublic | BindingFlags.Instance);
-        }
-
-        public IQueryable<TEntity> Include()
-        {
-            return this.Includable.Include();
-        }
-
-        public IQueryable<TEntity> Include(params string[] navigationPropsPath)
-        {
-            return this.Includable.Include(navigationPropsPath);
-        }
-
-        public IQueryable<TEntity> AsQueryable()
-        {
-            return this.Includable.AsQueryable();
-        }
-
-        public IQueryable<TEntity> Include(params Expression<Func<TEntity, object>>[] navigationPropsPath)
-        {
-            return this.Includable.Include(navigationPropsPath);
         }
 
         public void Add(TEntity entity)
@@ -127,19 +104,14 @@ namespace DbdocFramework.MongoDbProvider.Implementation
             }
         }
 
-        public ILazyLoadingQueryable<TEntity> UseLazyLoading()
+        public IIncludableQueryable<TEntity> UseLazyLoading()
         {
-            return this.ServiceProvider.GetService<ILazyLoadingQueryProvider<TEntity>>().CreateQuery();
+            return this.ServiceProvider.GetService<ILazyLoadingIncludableQueryable<TEntity>>();
         }
 
-        public IEnumerator<TEntity> GetEnumerator()
+        public IIncludableQueryable<TEntity> UseEagerLoading()
         {
-            return this.Includable.AsQueryable().GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return this.GetEnumerator();
+            return this.ServiceProvider.GetService<IEagerLoadingIncludableQueryable<TEntity>>();
         }
 
         private void UpdateIncludedToCollectionModels(TEntity entity)

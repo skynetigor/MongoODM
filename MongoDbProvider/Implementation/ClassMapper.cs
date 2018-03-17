@@ -26,13 +26,15 @@ namespace DbdocFramework.MongoDbProvider.Implementation
             this.TypeInitializer = typeInitializer;
             this.SerializationProvider = provider;
             this.ServiceProvider = serviceProvider;
+            BsonSerializer.RegisterSerializationProvider(this.SerializationProvider);
+            BsonSerializer.RegisterGenericSerializerDefinition(typeof(LazyLoadingContainer<>), typeof(DynamicProxySerializer<>));
         }
 
         public void MapClass<T>()
         {
             var type = typeof(T);
 
-            BsonSerializer.RegisterSerializationProvider(this.SerializationProvider);
+           var a=  typeof(LazyLoadingContainer<T>);
 
             if (!BsonClassMap.IsClassMapRegistered(type))
             {
@@ -66,8 +68,6 @@ namespace DbdocFramework.MongoDbProvider.Implementation
                               }
                           }
                       });
-
-                BsonSerializer.RegisterSerializer<T>(this.ServiceProvider.CreateInstance<ModelsSerializer<T>>());
             }
         }
 

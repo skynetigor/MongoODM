@@ -2,36 +2,30 @@
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using DbdocFramework.Abstracts.Queryable;
-using MongoDB.Bson;
 using DbdocFramework.Extensions;
 using DbdocFramework.MongoDbProvider.Abstracts;
 using DbdocFramework.MongoDbProvider.Helpers;
-using DbdocFramework.MongoDbProvider.Models;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
-namespace DbdocFramework.MongoDbProvider.QueryProvider
+namespace DbdocFramework.MongoDbProvider.QueryProviders
 {
-    internal class EagerLoadingQueryProvider<T> : IEagerLoadingQueryProvider<T>
+    abstract class AbstractQueryProviderFromPipeline<T> : IQueryProviderFromPipeline<T>
     {
-        private IMongoDatabase Database { get; }
-        private ITypeInitializer TypeInitializer { get; }
-        private TypeMetadata CurrentTypeMetadata { get; }
         private IList<BsonDocument> Pipeline { get; set; }
-        private IQueryProvider Provider { get; }
         private Expression DefaultExpression { get; }
 
-        public EagerLoadingQueryProvider(IMongoDatabase database, ITypeInitializer typeInitializer)
+        protected IQueryProvider Provider { get; }
+
+        protected AbstractQueryProviderFromPipeline(IMongoDatabase database, ITypeInitializer typeInitializer)
         {
-            this.Database = database;
-            this.TypeInitializer = typeInitializer;
-            CurrentTypeMetadata = typeInitializer.GetTypeMetadata<T>();
-            var queryable = this.Database.GetCollection<T>(this.CurrentTypeMetadata.CollectionName).AsQueryable();
+            var currentTypeMetadata = typeInitializer.GetTypeMetadata<T>();
+            var queryable = database.GetCollection<T>(currentTypeMetadata.CollectionName).AsQueryable();
             Provider = queryable.Provider;
             DefaultExpression = queryable.Expression;
         }
 
-        public IQueryable<T> CreateQuery(IList<BsonDocument> pipeLine)
+        public IQueryable<T> CreateQueryFromPipeline(IList<BsonDocument> pipeLine)
         {
             this.Pipeline = pipeLine;
             return CreateQuery<T>(DefaultExpression);
@@ -44,10 +38,10 @@ namespace DbdocFramework.MongoDbProvider.QueryProvider
 
         public IQueryable<TElement> CreateQuery<TElement>(Expression expression)
         {
-            return new MongoQueryable<TElement>(this, expression);
+            return new MongoDbQueryable<TElement>(this, expression);
         }
 
-        public object Execute(Expression expression)
+        public virtual object Execute(Expression expression)
         {
             if (this.Pipeline == null)
             {

@@ -21,5 +21,6 @@ namespace DbdocFramework.MongoDbProvider.Models
         public BsonDocument[] Query { get; set; }
 
         public IDictionary<string, IEnumerable<BsonDocument>> QueryDictionary { get; set; }
+
     }
 }

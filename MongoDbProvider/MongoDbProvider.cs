@@ -4,15 +4,14 @@ using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using DbdocFramework.Abstracts;
-using DbdocFramework.Abstracts.Queryable;
 using DbdocFramework.DI.Abstract;
 using DbdocFramework.DI.Implementation;
 using DbdocFramework.MongoDbProvider.Abstracts;
 using DbdocFramework.MongoDbProvider.Implementation;
 using DbdocFramework.MongoDbProvider.Serializers;
 using DbdocFramework.DI.Extensions;
-using DbdocFramework.MongoDbProvider.LazyLoading;
-using DbdocFramework.MongoDbProvider.QueryProvider;
+using DbdocFramework.MongoDbProvider.QueryProviders.EagerLoading;
+using DbdocFramework.MongoDbProvider.QueryProviders.LazyLoading;
 using DbdocFramework.MongoDbProvider.Settings;
 
 namespace DbdocFramework.MongoDbProvider
@@ -70,10 +69,12 @@ namespace DbdocFramework.MongoDbProvider
                 .AddSingleton<IDbsetContainer>(this)
                 .AddSingleton<IBsonSerializationProvider, SerializationProvider>()
                 .AddTransient<IQueryInitializer, QueryInitializer>()
-                .AddSingleton(typeof(IIncludableEnumerable<>), typeof(IncludableEnumerable<>))
                 .AddSingleton(typeof(IDbSet<>), typeof(MongoDbSet<>))
-                .AddTransient(typeof(ILazyLoadingQueryProvider<>), typeof(LazyLoadingQueryProvider<>))
-                .AddTransient(typeof(IEagerLoadingQueryProvider<>), typeof(EagerLoadingQueryProvider<>));
+                .AddTransient(typeof(LazyLoadingQueryProvider<>))
+                .AddTransient(typeof(EagerLoadingQueryProvider<>))
+                .AddTransient(typeof(ILazyLoadingIncludableQueryable<>), typeof(LazyLoadingIncludableQueryable<>))
+                .AddTransient(typeof(IEagerLoadingIncludableQueryable<>), typeof(EagerLoadingIncludableQueryable<>))
+                .AddSingleton<IMongoDbLazyLoadingInterceptor, LazyLoadingInterceptor>();
         }
     }
 }

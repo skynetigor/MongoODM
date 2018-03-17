@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using MongoDB.Bson;
 using DbdocFramework.Abstracts;
 using DbdocFramework.MongoDbProvider.Abstracts;
+using DbdocFramework.MongoDbProvider.Helpers;
 
 namespace DbdocFramework.MongoDbProvider.Implementation
 {
@@ -38,7 +39,7 @@ namespace DbdocFramework.MongoDbProvider.Implementation
                         {
                            { "from", currentTypeMetadata.CollectionName },
                            { "localField", "_id" },
-                           { "foreignField", type.Name + "Id"},
+                           { "foreignField", prop.GetNavigationPropertyName()},
                            {"as", prop.Name }
                         };
                         typeMetadata.QueryDictionary[prop.Name] = new[] { lookUp };
@@ -49,7 +50,7 @@ namespace DbdocFramework.MongoDbProvider.Implementation
                         lookUp["$lookup"] = new BsonDocument
                         {
                            { "from", tmodel.CollectionName },
-                           { "localField", propType.Name + "Id" },
+                           { "localField", prop.GetNavigationPropertyName()},
                            { "foreignField", "_id"},
                            {"as", prop.Name }
                         };

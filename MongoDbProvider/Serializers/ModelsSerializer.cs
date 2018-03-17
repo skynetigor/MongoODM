@@ -1,11 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
+using DbdocFramework.Extensions;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
-using DbdocFramework.Abstracts;
 using DbdocFramework.MongoDbProvider.Abstracts;
+using DbdocFramework.MongoDbProvider.Helpers;
 using DbdocFramework.MongoDbProvider.Models;
+using MongoDB.Bson.IO;
 
 namespace DbdocFramework.MongoDbProvider.Serializers
 {
@@ -81,7 +84,7 @@ namespace DbdocFramework.MongoDbProvider.Serializers
 
                     if (idValue != null)
                     {
-                        bsonWriter.WriteName(prop.PropertyType.Name + "Id");
+                        bsonWriter.WriteName(prop.GetNavigationPropertyName());
                         BsonSerializer.LookupSerializer(propTypeModel.IdProperty.PropertyType)
                             .Serialize(context, idValue);
                     }
@@ -91,7 +94,6 @@ namespace DbdocFramework.MongoDbProvider.Serializers
                     bsonWriter.WriteName(prop.Name);
                     BsonSerializer.LookupSerializer(prop.PropertyType).Serialize(context, propertyValue);
                 }
-
             }
 
             bsonWriter.WriteEndDocument();
@@ -99,7 +101,29 @@ namespace DbdocFramework.MongoDbProvider.Serializers
 
         public override T Deserialize(BsonDeserializationContext context, BsonDeserializationArgs args)
         {
-            return this.Serializer.Deserialize(context, args);
+            var reader = context.Reader;
+            var model = Activator.CreateInstance<T>();
+            reader.ReadStartDocument();
+            while (reader.ReadBsonType() != BsonType.EndOfDocument)
+            {
+                var name = context.Reader.ReadName();
+
+                var property = name == "_id" ? this.CurentTypeModel.IdProperty : model.GetPropertyIgnoreCase(name);
+
+                if (property != null)
+                {
+                    var value = BsonSerializer.LookupSerializer(property.PropertyType).Deserialize(context, args);
+
+                    property.SetValue(model, value);
+                }
+                else
+                {
+                    reader.SkipValue();
+                }
+            }
+
+            reader.ReadEndDocument();
+           return model;
         }
 
         public bool TryGetMemberSerializationInfo(string memberName, out BsonSerializationInfo serializationInfo)
