@@ -1,15 +1,22 @@
 ﻿using System;
-using MongoODM.Models;
+using DbdocFramework.Abstracts;
+using DbdocFramework.DI.Abstract;
+using DbdocFramework.MongoDbProvider.Models;
 
-namespace MongoODM.Attributes
+namespace DbdocFramework.Attributes
 {
     [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = true)]
 
     public sealed class CollectionNameAttribute : AbstractORMAttribute
     {
+        public CollectionNameAttribute()
+        {
+
+        }
+
         public string Name { get; set; }
 
-        protected override void Map(TypeModel model)
+        public override void Map(TypeMetadata model, Type currentType, ICustomServiceProvider serviceProvider)
         {
             model.CollectionName = Name;
         }

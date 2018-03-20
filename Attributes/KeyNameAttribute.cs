@@ -1,17 +1,17 @@
 ﻿using System;
-using MongoODM.Models;
+using System.Linq;
+using DbdocFramework.DI.Abstract;
+using DbdocFramework.MongoDbProvider.Models;
 
-namespace MongoODM.Attributes
+namespace DbdocFramework.Attributes
 {
     [AttributeUsage(AttributeTargets.Property, Inherited = false, AllowMultiple = true)]
 
     public class KeyNameAttribute : AbstractORMAttribute
     {
-        public string Name { get; set; }
-
-        protected override void Map(TypeModel model)
+        public override void Map(TypeMetadata model, Type currentType, ICustomServiceProvider serviceProvider)
         {
-            model.IdName = Name;
+            model.IdProperty = currentType.GetProperties().FirstOrDefault(p => p.GetCustomAttributes(typeof(KeyNameAttribute), false) != null);
         }
     }
 }
