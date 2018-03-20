@@ -1,7 +1,7 @@
 ﻿using DbdocFramework.MongoDbProvider.Abstracts;
 using MongoDB.Driver;
 
-namespace DbdocFramework.MongoDbProvider.QueryProviders.EagerLoading
+namespace DbdocFramework.MongoDbProvider.Implementation.QueryProviders.EagerLoading
 {
     internal class EagerLoadingQueryProvider<T>: AbstractQueryProviderFromPipeline<T>
     {

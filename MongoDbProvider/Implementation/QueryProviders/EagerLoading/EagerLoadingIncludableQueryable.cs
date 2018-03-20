@@ -3,7 +3,7 @@ using DbdocFramework.MongoDbProvider.Abstracts;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
 
-namespace DbdocFramework.MongoDbProvider.QueryProviders.EagerLoading
+namespace DbdocFramework.MongoDbProvider.Implementation.QueryProviders.EagerLoading
 {
     class EagerLoadingIncludableQueryable<T> : AbstractIncludableQueryable<T>, IEagerLoadingIncludableQueryable<T> where T: class
     {

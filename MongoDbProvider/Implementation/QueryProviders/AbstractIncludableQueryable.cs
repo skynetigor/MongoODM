@@ -3,13 +3,15 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using Castle.DynamicProxy;
 using DbdocFramework.Abstracts;
 using DbdocFramework.MongoDbProvider.Abstracts;
 using DbdocFramework.MongoDbProvider.Models;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using MongoDB.Driver.Linq;
 
-namespace DbdocFramework.MongoDbProvider.QueryProviders
+namespace DbdocFramework.MongoDbProvider.Implementation.QueryProviders
 {
     abstract class AbstractIncludableQueryable<T>: IIncludableQueryable<T> where T: class
     {

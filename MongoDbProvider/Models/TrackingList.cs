@@ -1,9 +1,10 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using DbdocFramework.MongoDbProvider.Abstracts;
 
 namespace DbdocFramework.MongoDbProvider.Models
 {
-    internal class TrackingList<T> : ICollection<T>, IList<T>
+    internal class TrackingList<T> : ICollection<T>, IList<T>, ITrackingList<T>
     {
         public TrackingList()
         {

@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 using DbdocFramework.MongoDbProvider.Abstracts;
 using MongoDB.Driver;
 
-namespace DbdocFramework.MongoDbProvider.QueryProviders.LazyLoading
+namespace DbdocFramework.MongoDbProvider.Implementation.QueryProviders.LazyLoading
 {
     internal class LazyLoadingQueryProvider<T>: AbstractQueryProviderFromPipeline<T> where T: class 
     {

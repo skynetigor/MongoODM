@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
-namespace DbdocFramework.MongoDbProvider.QueryProviders
+namespace DbdocFramework.MongoDbProvider.Implementation.QueryProviders
 {
     class MongoDbQueryable<T>: IQueryable<T>
     {

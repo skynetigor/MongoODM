@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using DbdocFramework.DI.Abstract;
+﻿using DbdocFramework.DI.Abstract;
 using DbdocFramework.MongoDbProvider.Abstracts;
-using DbdocFramework.MongoDbProvider.QueryProviders.EagerLoading;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
 
-namespace DbdocFramework.MongoDbProvider.QueryProviders.LazyLoading
+namespace DbdocFramework.MongoDbProvider.Implementation.QueryProviders.LazyLoading
 {
     class LazyLoadingIncludableQueryable<T> : AbstractIncludableQueryable<T>, ILazyLoadingIncludableQueryable<T> where T: class 
     {

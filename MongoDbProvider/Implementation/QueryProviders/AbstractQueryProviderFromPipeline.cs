@@ -8,7 +8,7 @@ using DbdocFramework.MongoDbProvider.Helpers;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
-namespace DbdocFramework.MongoDbProvider.QueryProviders
+namespace DbdocFramework.MongoDbProvider.Implementation.QueryProviders
 {
     abstract class AbstractQueryProviderFromPipeline<T> : IQueryProviderFromPipeline<T>
     {

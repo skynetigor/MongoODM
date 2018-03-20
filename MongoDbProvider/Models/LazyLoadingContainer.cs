@@ -4,16 +4,13 @@ using System.Text;
 
 namespace DbdocFramework.MongoDbProvider.Models
 {
-    class LazyLoadingContainer<T>
+    class LazyLoadingResult<T>
     {
-        public LazyLoadingContainer(T proxy, T target)
+        public LazyLoadingResult(IEnumerable<T> result)
         {
-            this.Target = target;
-            this.Proxy = proxy;
+            this.Result = result;
         }
 
-        public T Proxy { get; }
-
-        public T Target { get; }
+        public IEnumerable<T> Result { get; }
     }
 }

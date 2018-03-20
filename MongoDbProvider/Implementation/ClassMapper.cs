@@ -8,6 +8,7 @@ using DbdocFramework.DI.Abstract;
 using DbdocFramework.DI.Extensions;
 using DbdocFramework.Extensions;
 using DbdocFramework.MongoDbProvider.Abstracts;
+using DbdocFramework.MongoDbProvider.Implementation.Serializers;
 using DbdocFramework.MongoDbProvider.Models;
 using DbdocFramework.MongoDbProvider.Serializers;
 using MongoDB.Bson.IO;
@@ -27,14 +28,13 @@ namespace DbdocFramework.MongoDbProvider.Implementation
             this.SerializationProvider = provider;
             this.ServiceProvider = serviceProvider;
             BsonSerializer.RegisterSerializationProvider(this.SerializationProvider);
-            BsonSerializer.RegisterGenericSerializerDefinition(typeof(LazyLoadingContainer<>), typeof(DynamicProxySerializer<>));
         }
 
         public void MapClass<T>()
         {
             var type = typeof(T);
 
-           var a=  typeof(LazyLoadingContainer<T>);
+            var a = typeof(LazyLoadingResult<T>);
 
             if (!BsonClassMap.IsClassMapRegistered(type))
             {

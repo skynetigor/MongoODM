@@ -14,9 +14,8 @@ namespace DbdocFramework.MongoDbProvider.Serializers
 
         public override ICollection<T> Deserialize(BsonDeserializationContext context, BsonDeserializationArgs args)
         {
-            ArraySerializer<T> ser = new ArraySerializer<T>();
-            var arr = ser.Deserialize(context, args);
-            return new TrackingList<T>(arr);
+            var array = BsonSerializer.LookupSerializer<T[]>().Deserialize(context, args);
+            return new TrackingList<T>(array);
         }
     }
 
@@ -24,9 +23,8 @@ namespace DbdocFramework.MongoDbProvider.Serializers
     {
         public override IList<T> Deserialize(BsonDeserializationContext context, BsonDeserializationArgs args)
         {
-            ArraySerializer<T> ser = new ArraySerializer<T>();
-            var arr = ser.Deserialize(context, args);
-            return new TrackingList<T>(arr);
+            var array = BsonSerializer.LookupSerializer<T[]>().Deserialize(context, args);
+            return new TrackingList<T>(array);
         }
     }
 }

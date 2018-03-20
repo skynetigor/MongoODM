@@ -10,8 +10,9 @@ using DbdocFramework.MongoDbProvider.Abstracts;
 using DbdocFramework.MongoDbProvider.Implementation;
 using DbdocFramework.MongoDbProvider.Serializers;
 using DbdocFramework.DI.Extensions;
-using DbdocFramework.MongoDbProvider.QueryProviders.EagerLoading;
-using DbdocFramework.MongoDbProvider.QueryProviders.LazyLoading;
+using DbdocFramework.MongoDbProvider.Implementation.QueryProviders.EagerLoading;
+using DbdocFramework.MongoDbProvider.Implementation.QueryProviders.LazyLoading;
+using DbdocFramework.MongoDbProvider.Implementation.QueryProviders.LazyLoading.Loaders;
 using DbdocFramework.MongoDbProvider.Settings;
 
 namespace DbdocFramework.MongoDbProvider
@@ -74,7 +75,8 @@ namespace DbdocFramework.MongoDbProvider
                 .AddTransient(typeof(EagerLoadingQueryProvider<>))
                 .AddTransient(typeof(ILazyLoadingIncludableQueryable<>), typeof(LazyLoadingIncludableQueryable<>))
                 .AddTransient(typeof(IEagerLoadingIncludableQueryable<>), typeof(EagerLoadingIncludableQueryable<>))
-                .AddSingleton<IMongoDbLazyLoadingInterceptor, LazyLoadingInterceptor>();
+                .AddSingleton<IMongoDbLazyLoadingInterceptor, LazyLoadingInterceptor>()
+                .AddTransient<IDataLoadersProvider, DataLoadersProvider>();
         }
     }
 }

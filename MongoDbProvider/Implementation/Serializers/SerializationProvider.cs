@@ -5,6 +5,7 @@ using DbdocFramework.DI.Abstract;
 using DbdocFramework.DI.Extensions;
 using DbdocFramework.Extensions;
 using DbdocFramework.MongoDbProvider.Abstracts;
+using DbdocFramework.MongoDbProvider.Implementation.Serializers;
 using DbdocFramework.MongoDbProvider.Models;
 
 namespace DbdocFramework.MongoDbProvider.Serializers
@@ -32,9 +33,9 @@ namespace DbdocFramework.MongoDbProvider.Serializers
             {
                 return new ModelsSerializer<T>(this.TypeInitializer);
             }
-            else if (currentType.Name == typeof(LazyLoadingContainer<>).Name)
+            else if (currentType.Name == typeof(LazyLoadingResult<>).Name)
             {
-                var serializerType = typeof(DynamicProxySerializer<>).MakeGenericType(typeof(T).GetGenericArguments()[0]);
+                var serializerType = typeof(LazyLoadingSerializer<>).MakeGenericType(typeof(T).GetGenericArguments()[0]);
                 return (IBsonSerializer)this.ServiceProvider.CreateInstance(serializerType);
             }
 

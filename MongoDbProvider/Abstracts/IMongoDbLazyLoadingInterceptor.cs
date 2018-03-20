@@ -7,6 +7,8 @@ namespace DbdocFramework.MongoDbProvider.Abstracts
 {
     interface IMongoDbLazyLoadingInterceptor: IInterceptor
     {
-        T CreateProxy<T>(T target) where T: class;
+        T CreateProxy<T>(T target);
+
+        IEnumerable<T> CreateProxies<T>(IEnumerable<T> targets);
     }
 }
