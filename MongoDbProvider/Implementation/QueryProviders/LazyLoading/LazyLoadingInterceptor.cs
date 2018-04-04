@@ -1,12 +1,8 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
+﻿using System.Reflection;
 using Castle.DynamicProxy;
 using DbdocFramework.DI.Abstract;
 using DbdocFramework.Extensions;
 using DbdocFramework.MongoDbProvider.Abstracts;
-using DbdocFramework.MongoDbProvider.Models;
-using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace DbdocFramework.MongoDbProvider.Implementation.QueryProviders.LazyLoading
@@ -18,6 +14,7 @@ namespace DbdocFramework.MongoDbProvider.Implementation.QueryProviders.LazyLoadi
         private ICustomServiceProvider ServiceProvider { get; }
         private ProxyGenerator ProxyGenerator { get; }
         private IDataLoadersProvider DataLoadersProvider { get; }
+        private MethodInfo LoadDataGenericMethodInfo { get; }
 
         public LazyLoadingInterceptor(IMongoDatabase database, ITypeInitializer typeMetadata, ICustomServiceProvider serviceProvider, IDataLoadersProvider dataLoadersProvider)
         {
@@ -26,6 +23,8 @@ namespace DbdocFramework.MongoDbProvider.Implementation.QueryProviders.LazyLoadi
             ServiceProvider = serviceProvider;
             this.DataLoadersProvider = dataLoadersProvider;
             ProxyGenerator = new ProxyGenerator();
+
+            LoadDataGenericMethodInfo = this.GetPrivateMethod(nameof(LoadDataGeneric));
         }
 
         public void Intercept(IInvocation invocation)
@@ -49,7 +48,7 @@ namespace DbdocFramework.MongoDbProvider.Implementation.QueryProviders.LazyLoadi
 
         private object LoadData(object obj, PropertyInfo invokedProp)
         {
-            return this.GetPrivateMethod(nameof(LoadDataGeneric))
+            return LoadDataGenericMethodInfo
                  .MakeGenericMethod(obj.GetType(), invokedProp.PropertyType)
                  .Invoke(this,
                      new object[] { obj, invokedProp });

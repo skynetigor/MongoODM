@@ -16,6 +16,7 @@ namespace DbdocFramework.MongoDbProvider.Implementation.QueryProviders
     abstract class AbstractIncludableQueryable<T>: IIncludableQueryable<T> where T: class
     {
         private Expression expression;
+
         private IMongoDatabase Database { get; }
         protected ITypeInitializer TypeInitializer { get; }
         protected TypeMetadata CurrentTypeModel => this.TypeInitializer.GetTypeMetadata<T>();
@@ -52,13 +53,12 @@ namespace DbdocFramework.MongoDbProvider.Implementation.QueryProviders
                 .Cast<MemberExpression>()
                 .Select(exp => exp.Member.Name)
                 .ToArray();
+
             return this.Include(p);
         }
 
         public IQueryable<T> Include(params string[] navigationPropsPath)
         {
-            var typeEntity = typeof(T);
-
             var queryList = new List<BsonDocument>();
 
             foreach (var path in navigationPropsPath)
@@ -78,7 +78,6 @@ namespace DbdocFramework.MongoDbProvider.Implementation.QueryProviders
 
         public IQueryable<T> Include()
         {
-            var typeEntity = typeof(T);
             var queryList = new List<BsonDocument>();
 
             foreach (var doc in this.CurrentTypeModel.QueryDictionary.Values)

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using DbdocFramework.MongoDbProvider.Abstracts;
 using MongoDB.Driver;
@@ -19,17 +18,14 @@ namespace DbdocFramework.MongoDbProvider.Implementation.QueryProviders.LazyLoadi
         {
             var data = base.Execute(expression);
 
-            if (data == null)
+            switch (data)
             {
-                return null;
-            }
-            else if (data is IEnumerable<T> enumerable)
-            {
-                return this.ProxyGenerator.CreateProxies(enumerable);
-            }
-            else if (data.GetType() == typeof(T))
-            {
-                return this.ProxyGenerator.CreateProxy((T)data);
+                case null:
+                    return null;
+                case IEnumerable<T> enumerable:
+                    return this.ProxyGenerator.CreateProxies(enumerable);
+                case T entity:
+                    return this.ProxyGenerator.CreateProxy(entity);
             }
 
             return data;

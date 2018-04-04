@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Castle.DynamicProxy;
 using DbdocFramework.DI.Abstract;
 using DbdocFramework.MongoDbProvider.Abstracts;
@@ -22,7 +20,7 @@ namespace DbdocFramework.MongoDbProvider.Implementation.QueryProviders.LazyLoadi
             this.TypeInitializer = typeInitializer;
         }
 
-        private object CreateProxyReq(object target)
+        private object CreateProxyHelper(object target)
         {
             if (target == null)
             {
@@ -32,6 +30,7 @@ namespace DbdocFramework.MongoDbProvider.Implementation.QueryProviders.LazyLoadi
             var targetType = target.GetType();
             var interceptor = this.ServiceProvider.GetService<ILazyLoadingInterceptor>();
             var proxy = ProxyGenerator.CreateClassProxyWithTarget(targetType, target, interceptor);
+
             foreach (var propertyInfo in target.GetType().GetProperties())
             {
                 if (!propertyInfo.GetGetMethod().IsVirtual)
@@ -44,16 +43,17 @@ namespace DbdocFramework.MongoDbProvider.Implementation.QueryProviders.LazyLoadi
 
                     if (value != null)
                     {
-                       propertyInfo.SetValue(target, this.CreateProxy(value));
+                       propertyInfo.SetValue(target, this.CreateProxyHelper(value));
                     }
                 }
             }
+
             return proxy;
         }
 
         public T CreateProxy<T>(T target)
         {
-            return (T)this.CreateProxyReq(target);
+            return (T)this.CreateProxyHelper(target);
         }
 
         public IEnumerable<T> CreateProxies<T>(IEnumerable<T> targets)

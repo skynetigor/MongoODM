@@ -13,6 +13,7 @@ namespace DbdocFramework.MongoDbProvider.Implementation.QueryProviders
     abstract class AbstractQueryProviderFromPipeline<T> : IQueryProviderFromPipeline<T>
     {
         private IList<BsonDocument> Pipeline { get; set; }
+
         private Expression DefaultExpression { get; }
 
         protected IQueryProvider Provider { get; }
