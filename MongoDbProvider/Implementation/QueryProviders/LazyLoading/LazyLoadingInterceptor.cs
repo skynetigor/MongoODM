@@ -11,14 +11,13 @@ using MongoDB.Driver;
 
 namespace DbdocFramework.MongoDbProvider.Implementation.QueryProviders.LazyLoading
 {
-    internal class LazyLoadingInterceptor : IMongoDbLazyLoadingInterceptor
+    internal class LazyLoadingInterceptor : ILazyLoadingInterceptor
     {
         private IMongoDatabase Database { get; }
         private ITypeInitializer TypeMetadata { get; }
         private ICustomServiceProvider ServiceProvider { get; }
         private ProxyGenerator ProxyGenerator { get; }
         private IDataLoadersProvider DataLoadersProvider { get; }
-
 
         public LazyLoadingInterceptor(IMongoDatabase database, ITypeInitializer typeMetadata, ICustomServiceProvider serviceProvider, IDataLoadersProvider dataLoadersProvider)
         {
@@ -46,24 +45,6 @@ namespace DbdocFramework.MongoDbProvider.Implementation.QueryProviders.LazyLoadi
             }
 
             invocation.Proceed();
-        }
-
-        public T CreateProxy<T>(T target)
-        {
-            var proxy = ProxyGenerator.CreateClassProxyWithTarget(typeof(T), target, this);
-            foreach (var propertyInfo in target.GetType().GetProperties())
-            {
-                if (!propertyInfo.GetGetMethod().IsVirtual)
-                {
-                    propertyInfo.SetValue(proxy, propertyInfo.GetValue(target));
-                }
-            }
-            return (T)proxy;
-        }
-
-        public IEnumerable<T> CreateProxies<T>(IEnumerable<T> targets)
-        {
-            return targets.Select(this.CreateProxy);
         }
 
         private object LoadData(object obj, PropertyInfo invokedProp)

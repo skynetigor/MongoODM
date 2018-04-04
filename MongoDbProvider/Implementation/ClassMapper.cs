@@ -3,15 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using MongoDB.Bson.Serialization;
-using DbdocFramework.Abstracts;
 using DbdocFramework.DI.Abstract;
-using DbdocFramework.DI.Extensions;
 using DbdocFramework.Extensions;
 using DbdocFramework.MongoDbProvider.Abstracts;
-using DbdocFramework.MongoDbProvider.Implementation.Serializers;
 using DbdocFramework.MongoDbProvider.Models;
 using DbdocFramework.MongoDbProvider.Serializers;
-using MongoDB.Bson.IO;
 
 namespace DbdocFramework.MongoDbProvider.Implementation
 {

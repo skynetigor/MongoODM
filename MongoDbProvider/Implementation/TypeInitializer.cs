@@ -38,6 +38,11 @@ namespace DbdocFramework.MongoDbProvider.Implementation
             return typeModel;
         }
 
+        public bool IsTypeRegistered(Type type)
+        {
+            return this.GetTypeMetadata(type) != null;
+        }
+
         public TypeMetadata GetTypeMetadata<T>()
         {
             return this.GetTypeMetadata(typeof(T));

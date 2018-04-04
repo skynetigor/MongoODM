@@ -6,25 +6,33 @@ using MongoDB.Driver;
 
 namespace DbdocFramework.MongoDbProvider.Implementation.QueryProviders.LazyLoading
 {
-    internal class LazyLoadingQueryProvider<T>: AbstractQueryProviderFromPipeline<T> where T: class 
+    internal class LazyLoadingQueryProvider<T> : AbstractQueryProviderFromPipeline<T> where T : class
     {
-        private IMongoDbLazyLoadingInterceptor Interceptor { get; }
+        private ILazyLoadingProxyGenerator ProxyGenerator { get; }
 
-        public LazyLoadingQueryProvider(IMongoDatabase database, ITypeInitializer typeInitializer, IMongoDbLazyLoadingInterceptor interceptor) : base(database, typeInitializer)
+        public LazyLoadingQueryProvider(IMongoDatabase database, ITypeInitializer typeInitializer, ILazyLoadingProxyGenerator interceptor) : base(database, typeInitializer)
         {
-            this.Interceptor = interceptor;
+            this.ProxyGenerator = interceptor;
         }
 
         public override object Execute(Expression expression)
         {
             var data = base.Execute(expression);
 
-            if (data is IEnumerable<T> enumerable)
+            if (data == null)
             {
-                return enumerable.Select(this.Interceptor.CreateProxy);
+                return null;
+            }
+            else if (data is IEnumerable<T> enumerable)
+            {
+                return this.ProxyGenerator.CreateProxies(enumerable);
+            }
+            else if (data.GetType() == typeof(T))
+            {
+                return this.ProxyGenerator.CreateProxy((T)data);
             }
 
-            return this.Interceptor.CreateProxy((T)data);
+            return data;
         }
     }
 }

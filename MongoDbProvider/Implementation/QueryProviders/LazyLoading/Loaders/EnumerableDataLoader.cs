@@ -15,13 +15,13 @@ namespace DbdocFramework.MongoDbProvider.Implementation.QueryProviders.LazyLoadi
     {
         private IMongoDatabase Database { get; }
         private ITypeInitializer TypeInitializer { get; }
-        private IMongoDbLazyLoadingInterceptor Interceptor { get; }
+        private ILazyLoadingProxyGenerator ProxyGenerator { get; }
 
-        public EnumerableDataLoader(IMongoDatabase database, ITypeInitializer typeInitializer, IMongoDbLazyLoadingInterceptor interceptor)
+        public EnumerableDataLoader(IMongoDatabase database, ITypeInitializer typeInitializer, ILazyLoadingProxyGenerator interceptor)
         {
             Database = database;
             TypeInitializer = typeInitializer;
-            this.Interceptor = interceptor;
+            this.ProxyGenerator = interceptor;
         }
 
         public IEnumerable<TResult> LoadData<TSource>(TSource source, PropertyInfo loadedProperty)
@@ -47,7 +47,7 @@ namespace DbdocFramework.MongoDbProvider.Implementation.QueryProviders.LazyLoadi
 
             var targets = this.Database.GetCollection<TResult>(resultTypeMetadata.CollectionName).Aggregate(pipeline).ToEnumerable();
 
-            return this.Interceptor.CreateProxies(targets);
+            return this.ProxyGenerator.CreateProxies(targets);
         }
     }
 }

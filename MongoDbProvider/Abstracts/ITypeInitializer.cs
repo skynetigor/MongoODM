@@ -12,5 +12,7 @@ namespace DbdocFramework.MongoDbProvider.Abstracts
         TypeMetadata RegisterType<T>();
 
         TypeMetadata RegisterType(Type type);
+
+        bool IsTypeRegistered(Type type);
     }
 }

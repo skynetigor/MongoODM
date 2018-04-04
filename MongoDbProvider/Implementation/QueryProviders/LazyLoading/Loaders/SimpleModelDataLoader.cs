@@ -7,6 +7,7 @@ using DbdocFramework.DI.Abstract;
 using DbdocFramework.DI.Extensions;
 using DbdocFramework.MongoDbProvider.Abstracts;
 using DbdocFramework.MongoDbProvider.Models;
+using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
@@ -17,7 +18,7 @@ namespace DbdocFramework.MongoDbProvider.Implementation.QueryProviders.LazyLoadi
         private ICustomServiceProvider ServiceProvider { get; }
         private ITypeInitializer TypeInitializer { get; }
         private IMongoDatabase Database { get; }
-        
+
         public SimpleModelDataLoader(ICustomServiceProvider serviceProvider, ITypeInitializer typeInitializer, IMongoDatabase database)
         {
             this.ServiceProvider = serviceProvider;
@@ -27,26 +28,36 @@ namespace DbdocFramework.MongoDbProvider.Implementation.QueryProviders.LazyLoadi
 
         public T LoadData<TSource>(TSource source, PropertyInfo loadedProperty)
         {
-            var currenttypeMetadata = this.TypeInitializer.GetTypeMetadata(source.GetType());
-            var navPropName = typeof(T).Name;
-
-            var queryList = new List<BsonDocument>
+            try
             {
-                new BsonDocument("$match",
-                    new BsonDocument("_id", currenttypeMetadata.IdProperty.GetValue(source).ToString()))
-            };
+                var currenttypeMetadata = this.TypeInitializer.GetTypeMetadata(source.GetType());
+                var navPropName = typeof(T).Name;
 
-            queryList.AddRange(currenttypeMetadata.QueryDictionary[loadedProperty.Name]);
-            queryList.Add(new BsonDocument("$project", new BsonDocument
+                var queryList = new List<BsonDocument>
+                {
+                    new BsonDocument("$match",
+                        new BsonDocument("_id", currenttypeMetadata.IdProperty.GetValue(source).ToString()))
+                };
+
+                queryList.AddRange(currenttypeMetadata.QueryDictionary[loadedProperty.Name]);
+                queryList.Add(new BsonDocument("$replaceRoot", new BsonDocument
+                {
+                    { "newRoot", $"${navPropName}" }
+                }));
+
+                PipelineDefinition<TSource, T> pipeline = queryList;
+                var resultTarget = this.Database.GetCollection<TSource>(currenttypeMetadata.CollectionName).Aggregate(pipeline).FirstOrDefault();
+
+                if (resultTarget != null)
+                {
+                    return this.ServiceProvider.GetService<ILazyLoadingProxyGenerator>().CreateProxy(resultTarget);
+                }
+                return default(T);
+            }
+            catch (Exception e)
             {
-                { "result", $"${navPropName}" }, { "_id", 0 }
-            }));
-
-            PipelineDefinition<TSource, LazyLoadingResult<T>> a = queryList;
-
-            var g = this.Database.GetCollection<TSource>(currenttypeMetadata.CollectionName).Aggregate(a).FirstOrDefault();
-
-            return g.Result.FirstOrDefault();
+                return default(T);
+            }
         }
     }
 }

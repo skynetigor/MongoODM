@@ -5,10 +5,8 @@ using Castle.DynamicProxy;
 
 namespace DbdocFramework.MongoDbProvider.Abstracts
 {
-    interface IMongoDbLazyLoadingInterceptor: IInterceptor
+    interface ILazyLoadingInterceptor: IInterceptor
     {
-        T CreateProxy<T>(T target);
-
-        IEnumerable<T> CreateProxies<T>(IEnumerable<T> targets);
+        
     }
 }

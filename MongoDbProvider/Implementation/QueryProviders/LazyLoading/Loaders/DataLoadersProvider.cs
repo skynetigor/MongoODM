@@ -32,6 +32,11 @@ namespace DbdocFramework.MongoDbProvider.Implementation.QueryProviders.LazyLoadi
                     return (IDataLoader<TResult>) this.ServiceProvider.CreateInstance(
                         typeof(CollectionsLoader<>).MakeGenericType(genericArgumentType));
                 }
+                else if (resultType.Name == typeof(IList<>).Name)
+                {
+                    return (IDataLoader<TResult>)this.ServiceProvider.CreateInstance(
+                        typeof(ListDataLoader<>).MakeGenericType(genericArgumentType));
+                }
             }
 
             return this.ServiceProvider.CreateInstance<SimpleModelDataLoader<TResult>>();

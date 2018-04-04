@@ -6,11 +6,11 @@ namespace DbdocFramework.MongoDbProvider.Models
 {
     class LazyLoadingResult<T>
     {
-        public LazyLoadingResult(IEnumerable<T> result)
+        public LazyLoadingResult(T result)
         {
             this.Result = result;
         }
 
-        public IEnumerable<T> Result { get; }
+        public T Result { get; }
     }
 }
