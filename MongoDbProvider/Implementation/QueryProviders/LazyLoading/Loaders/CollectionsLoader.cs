@@ -16,7 +16,7 @@ namespace DbdocFramework.MongoDbProvider.Implementation.QueryProviders.LazyLoadi
 
         public override ICollection<T> LoadData<TSource>(TSource source, PropertyInfo loadedProperty)
         {
-            return new TrackingList<T>(this.EnumerableDataLoader.LoadData(source, loadedProperty));
+            return TrackingList<T>.CreateExistingTrackingList(this.EnumerableDataLoader.LoadData(source, loadedProperty));
         }
     }
 }

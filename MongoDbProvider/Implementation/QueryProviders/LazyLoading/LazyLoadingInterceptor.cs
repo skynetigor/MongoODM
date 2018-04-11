@@ -1,4 +1,6 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Collections.Generic;
+using System.Reflection;
 using Castle.DynamicProxy;
 using DbdocFramework.DI.Abstract;
 using DbdocFramework.Extensions;
@@ -33,14 +35,15 @@ namespace DbdocFramework.MongoDbProvider.Implementation.QueryProviders.LazyLoadi
             {
                 var value = invocation.MethodInvocationTarget.Invoke(invocation.InvocationTarget, invocation.Arguments);
 
-                if (value == null)
+                if (IsTypeRegistered(invocation.Method.ReturnType))
                 {
-                    var invokedProperty = invocation.TargetType.GetProperty(invocation.Method.Name.Substring(4));
-                    value = this.LoadData(invocation.InvocationTarget, invokedProperty);
-                    invokedProperty.SetValue(invocation.InvocationTarget, value);
+                    if (value == null || !ProxyUtil.IsProxy(value))
+                    {
+                        var invokedProperty = invocation.TargetType.GetProperty(invocation.Method.Name.Substring(4));
+                        value = this.LoadData(invocation.InvocationTarget, invokedProperty);
+                        invokedProperty.SetValue(invocation.InvocationTarget, value);
+                    }
                 }
-
-                invocation.ReturnValue = value;
             }
 
             invocation.Proceed();
@@ -57,6 +60,21 @@ namespace DbdocFramework.MongoDbProvider.Implementation.QueryProviders.LazyLoadi
         private TResult LoadDataGeneric<TSource, TResult>(TSource source, PropertyInfo loadedProperty)
         {
             return this.DataLoadersProvider.GetDataLoader<TResult>().LoadData(source, loadedProperty);
+        }
+
+        private bool IsTypeRegistered(Type type)
+        {
+            if (type.IsGenericType)
+            {
+                var genericDefinition = type.GetGenericTypeDefinition();
+
+                if (genericDefinition == typeof(ICollection<>) || genericDefinition == typeof(IList<>))
+                {
+                    type = type.GetGenericArguments()[0];
+                }
+            }
+
+            return TypeMetadata.IsTypeRegistered(type);
         }
     }
 }

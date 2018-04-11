@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using MongoDB.Bson;
 using DbdocFramework.MongoDbProvider.Abstracts;
 using DbdocFramework.MongoDbProvider.Helpers;
@@ -33,12 +34,21 @@ namespace DbdocFramework.MongoDbProvider.Implementation
                     if (propType.Name == typeof(ICollection<>).Name || propType.Name == typeof(IEnumerable<>).Name)
                     {
                         var gerType = propType.GetGenericArguments()[0];
+
+                        var navigationProp = gerType.GetProperties()
+                            .FirstOrDefault(p => p.PropertyType == type);
+
+                        if (navigationProp == null)
+                        {
+                            continue;
+                        }
+
                         var currentTypeMetadata = this.TypeInitializer.GetTypeMetadata(gerType);
                         lookUp["$lookup"] = new BsonDocument
                         {
                            { "from", currentTypeMetadata.CollectionName },
                            { "localField", "_id" },
-                           { "foreignField", prop.GetNavigationPropertyName()},
+                           { "foreignField", navigationProp.GetNavigationPropertyName()},
                            {"as", prop.Name }
                         };
                         typeMetadata.QueryDictionary[prop.Name] = new[] { lookUp };

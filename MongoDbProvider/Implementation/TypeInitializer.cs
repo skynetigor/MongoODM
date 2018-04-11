@@ -83,9 +83,9 @@ namespace DbdocFramework.MongoDbProvider.Implementation
             if (model.IdProperty == null)
             {
                 model.IdProperty = type.GetProperties().FirstOrDefault(
-                    prop => prop.Name.ToLower() == (type.Name + "id").ToLower()
-                            || prop.Name.ToLower() == "id".ToLower());
-                return; ;
+                    prop => prop.Name.Equals(type.Name + "id", StringComparison.OrdinalIgnoreCase)
+                            || prop.Name.Equals("id", StringComparison.OrdinalIgnoreCase));
+                return;
             }
 
             throw new MissingMemberException();

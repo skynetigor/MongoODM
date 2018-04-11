@@ -1,11 +1,30 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using DbdocFramework.MongoDbProvider.Abstracts;
+using BindingFlags = System.Reflection.BindingFlags;
 
 namespace DbdocFramework.MongoDbProvider.Models
 {
     internal class TrackingList<T> : ICollection<T>, IList<T>, ITrackingList<T>
     {
+        public static TrackingList<T> CreateNewTrackingList(IEnumerable<T> entities)
+        {
+            return new TrackingList<T>
+            {
+                AddedList = new List<T>(entities)
+            };
+        }
+
+        public static TrackingList<T> CreateExistingTrackingList(IEnumerable<T> entities)
+        {
+            return new TrackingList<T>
+            {
+                CurrentList = new List<T>(entities)
+            };
+        }
+
         public TrackingList()
         {
             this.RemovedList = new List<T>();
@@ -13,18 +32,20 @@ namespace DbdocFramework.MongoDbProvider.Models
             this.AddedList = new List<T>();
         }
 
-        public TrackingList(IEnumerable<T> items)
-        {
-            this.RemovedList = new List<T>();
-            this.CurrentList = new List<T>(items);
-            this.AddedList = new List<T>();
-        }
+        //public TrackingList(IEnumerable<T> items)
+        //{
+        //    items = items.ToArray();
 
-        public List<T> RemovedList { get; }
+        //    this.CurrentList = new List<T>(items);
+        //    this.AddedList = new List<T>(items);
+        //    this.RemovedList = new List<T>();
+        //}
 
-        public List<T> AddedList { get; }
+        public List<T> RemovedList { get; private set; }
 
-        public List<T> CurrentList { get; }
+        public List<T> AddedList { get; private set; }
+
+        public List<T> CurrentList { get; private set; }
 
         public int Count { get { return this.CurrentList.Count; } }
 
@@ -32,10 +53,7 @@ namespace DbdocFramework.MongoDbProvider.Models
 
         public T this[int index]
         {
-            get
-            {
-                return this.CurrentList[index];
-            }
+            get => this.CurrentList[index];
             set
             {
                 var item = this.CurrentList[index];

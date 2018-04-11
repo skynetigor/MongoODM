@@ -30,8 +30,6 @@ namespace DbdocFramework.MongoDbProvider.Implementation
         {
             var type = typeof(T);
 
-            var a = typeof(LazyLoadingResult<T>);
-
             if (!BsonClassMap.IsClassMapRegistered(type))
             {
                 BsonClassMap.RegisterClassMap<T>(

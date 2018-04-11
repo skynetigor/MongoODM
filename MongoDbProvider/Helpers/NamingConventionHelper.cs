@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Text;
+﻿using System.Reflection;
 
 namespace DbdocFramework.MongoDbProvider.Helpers
 {
-    public static class  NamingConventionHelper
+    internal static class  NamingConventionHelper
     {
         public static string GetNavigationPropertyName(this PropertyInfo property)
         {

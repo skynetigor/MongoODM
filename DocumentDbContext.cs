@@ -1,7 +1,5 @@
 ﻿using DbdocFramework.Abstracts;
-using System;
 using System.Linq;
-using System.Reflection;
 using DbdocFramework.Extensions;
 using DbdocFramework.MongoDbProvider.Settings;
 
@@ -28,7 +26,7 @@ namespace DbdocFramework
 
         private void Setup()
         {
-            var items = this.GetProperties().Where(p => p.PropertyType.Name == (typeof(IDbSet<>).Name));
+            var items = this.GetProperties().Where(p => p.PropertyType.GetGenericTypeDefinition() == typeof(IDbSet<>)).ToArray();
 
             foreach (var prop in items)
             {

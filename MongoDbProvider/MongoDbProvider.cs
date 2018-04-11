@@ -8,7 +8,6 @@ using DbdocFramework.DI.Abstract;
 using DbdocFramework.DI.Implementation;
 using DbdocFramework.MongoDbProvider.Abstracts;
 using DbdocFramework.MongoDbProvider.Implementation;
-using DbdocFramework.MongoDbProvider.Serializers;
 using DbdocFramework.DI.Extensions;
 using DbdocFramework.MongoDbProvider.Implementation.QueryProviders.EagerLoading;
 using DbdocFramework.MongoDbProvider.Implementation.QueryProviders.LazyLoading;
