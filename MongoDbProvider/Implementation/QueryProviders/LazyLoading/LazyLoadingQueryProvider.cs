@@ -20,8 +20,6 @@ namespace DbdocFramework.MongoDbProvider.Implementation.QueryProviders.LazyLoadi
 
             switch (data)
             {
-                case null:
-                    return null;
                 case IEnumerable<T> enumerable:
                     return this.ProxyGenerator.CreateProxies(enumerable);
                 case T entity:

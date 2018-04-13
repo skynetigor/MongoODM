@@ -2,7 +2,7 @@
 
 namespace DbdocFramework.MongoDbProvider.Abstracts
 {
-    interface IEagerLoadingIncludableQueryable<T>: IIncludableQueryable<T>
+    internal interface IEagerLoadingIncludableQueryable<T>: IIncludableQueryable<T>
     {
     }
 }

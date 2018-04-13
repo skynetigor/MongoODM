@@ -9,6 +9,6 @@ namespace DbdocFramework.Attributes
 {
     public abstract class AbstractORMAttribute : Attribute, ITypeMetadata
     {
-        public abstract void Map(TypeMetadata model, Type currentType, ICustomServiceProvider serviceProvider);
+        public abstract void Map(TypeMetadata model, Type currentType);
     }
 }

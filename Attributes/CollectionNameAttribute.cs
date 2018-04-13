@@ -9,14 +9,14 @@ namespace DbdocFramework.Attributes
 
     public sealed class CollectionNameAttribute : AbstractORMAttribute
     {
-        public CollectionNameAttribute()
+        public CollectionNameAttribute(string name)
         {
-
+            Name = name;
         }
 
-        public string Name { get; set; }
+        private string Name { get; }
 
-        public override void Map(TypeMetadata model, Type currentType, ICustomServiceProvider serviceProvider)
+        public override void Map(TypeMetadata model, Type currentType)
         {
             model.CollectionName = Name;
         }

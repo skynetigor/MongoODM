@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using DbdocFramework.MongoDbProvider.Abstracts;
 using DbdocFramework.MongoDbProvider.Helpers;
-using DbdocFramework.MongoDbProvider.Models;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
@@ -36,11 +33,6 @@ namespace DbdocFramework.MongoDbProvider.Implementation.QueryProviders.LazyLoadi
             {
                 new BsonDocument("$match",
                     new BsonDocument(navigationProperty.GetNavigationPropertyName(), resultTypeMetadata.IdProperty.GetValue(source).ToString())),
-                //new BsonDocument("$project", new BsonDocument
-                //{
-                //    {"result", "$$ROOT"},
-                //    {"_id", 0}
-                //})
             };
 
             PipelineDefinition<TResult, TResult> pipeline = queryList;

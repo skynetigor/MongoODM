@@ -1,22 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Reflection;
-using System.Text;
 using DbdocFramework.DI.Abstract;
 using DbdocFramework.MongoDbProvider.Models;
 
 namespace DbdocFramework.MongoDbProvider.Implementation.QueryProviders.LazyLoading.Loaders
 {
-    class ListDataLoader<T>: AbstractDataLoader<T, ICollection<T>>
+    class ListDataLoader<T>: AbstractDataLoader<T, IList<T>>
     {
         public ListDataLoader(ICustomServiceProvider serviceProvider) : base(serviceProvider)
         {
         }
 
-        public override ICollection<T> LoadData<TSource>(TSource source, PropertyInfo loadedProperty)
+        public override IList<T> LoadData<TSource>(TSource source, PropertyInfo loadedProperty)
         {
             return TrackingList<T>.CreateExistingTrackingList(this.EnumerableDataLoader.LoadData(source, loadedProperty));
         }
     }
-
 }

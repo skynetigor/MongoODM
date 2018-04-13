@@ -27,7 +27,7 @@ namespace DbdocFramework.MongoDbProvider.Implementation
         {
             this.Database = database;
             this.TypeInitializer = typeInitializer;
-            this.CurrentTypeModel = TypeInitializer.RegisterType<TEntity>();
+            this.CurrentTypeModel = TypeInitializer.GetTypeMetadata<TEntity>();
             this.ServiceProvider = serviceProvider;
             this.DbsetContainer = dbsetContainer;
             this.SetRelationsMethod = this.GetType().GetMethod(nameof(this.SetRelations), BindingFlags.NonPublic | BindingFlags.Instance);
@@ -49,8 +49,6 @@ namespace DbdocFramework.MongoDbProvider.Implementation
             var insertableList = new List<TEntity>();
             var packageCount = 100;
             var currentCount = 0;
-
-            entities = entities.ToArray();
 
             void UpdateAction()
             {
@@ -97,7 +95,7 @@ namespace DbdocFramework.MongoDbProvider.Implementation
 
         public void UpdateRange(IEnumerable<TEntity> entities)
         {
-            foreach (var e in entities.ToArray())
+            foreach (var e in entities)
             {
                 this.Update(e);
             }
@@ -105,12 +103,18 @@ namespace DbdocFramework.MongoDbProvider.Implementation
 
         public void Remove(TEntity entity)
         {
-            this.Database.GetCollection<BsonDocument>(CurrentTypeModel.CollectionName).DeleteOne(entity.ToBsonDocument());
+            if (entity != null)
+            {
+                var filter = new BsonDocument { {"_id", (string)this.CurrentTypeModel.IdProperty.GetValue(entity)} };
+
+                this.Database.GetCollection<BsonDocument>(CurrentTypeModel.CollectionName)
+                    .DeleteOne(entity.ToBsonDocument());
+            }
         }
 
         public void RemoveRange(IEnumerable<TEntity> entities)
         {
-            foreach (var e in entities.ToArray())
+            foreach (var e in entities)
             {
                 this.Remove(e);
             }
@@ -169,22 +173,11 @@ namespace DbdocFramework.MongoDbProvider.Implementation
             }
         }
 
-        private void SetRelations<T>(TEntity entity, TrackingList<T> trackingList, IEnumerable<PropertyInfo> props) where T : class
+        private void SetRelations<T>(TEntity entity, ITrackingList<T> trackingList, IEnumerable<PropertyInfo> props) where T : class
         {
             var newEntities = new List<T>();
             var updatedEntities = new List<T>();
             var tmodel = this.TypeInitializer.GetTypeMetadata<T>();
-
-            foreach (var ent in trackingList.AddedList)
-            {
-                if (this.CurrentTypeModel.IdProperty.GetValue(ent) == null)
-                {
-                    newEntities.Add(ent);
-                    continue;
-                }
-
-                updatedEntities.Add(ent);
-            }
 
             foreach (var ent in trackingList.AddedList)
             {
@@ -195,6 +188,14 @@ namespace DbdocFramework.MongoDbProvider.Implementation
                         prop.SetValue(ent, entity);
                     }
                 }
+
+                if (tmodel.IdProperty.GetValue(ent) == null)
+                {
+                    newEntities.Add(ent);
+                    continue;
+                }
+
+                updatedEntities.Add(ent);
             }
 
             foreach (var ent in trackingList.RemovedList)
@@ -208,7 +209,6 @@ namespace DbdocFramework.MongoDbProvider.Implementation
                 }
             }
 
-            var tModel = this.TypeInitializer.GetTypeMetadata<T>();
             var modelsProvider = this.DbsetContainer.GetDbSet<T>();
             var updated = updatedEntities.Concat(trackingList.RemovedList).ToArray();
 

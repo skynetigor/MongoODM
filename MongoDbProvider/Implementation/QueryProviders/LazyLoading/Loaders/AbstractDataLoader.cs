@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Reflection;
-using System.Text;
 using DbdocFramework.DI.Abstract;
 using DbdocFramework.DI.Extensions;
 using DbdocFramework.MongoDbProvider.Abstracts;
@@ -15,7 +13,7 @@ namespace DbdocFramework.MongoDbProvider.Implementation.QueryProviders.LazyLoadi
         protected IDataLoader<IEnumerable<TModel>> EnumerableDataLoader =>
             this.ServiceProvider.CreateInstance<EnumerableDataLoader<TModel>>();
 
-        public AbstractDataLoader(ICustomServiceProvider serviceProvider)
+        protected AbstractDataLoader(ICustomServiceProvider serviceProvider)
         {
             this.ServiceProvider = serviceProvider;
         }

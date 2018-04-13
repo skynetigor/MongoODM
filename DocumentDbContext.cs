@@ -40,8 +40,6 @@ namespace DbdocFramework
                 var instance = this.Provider.GetDbSet(modelType);
                 prop.SetValue(this, instance);
             }
-
-            this.Provider.InitializeTypesMetadata();
         }
     }
 }

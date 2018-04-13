@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace DbdocFramework.Extensions
@@ -21,6 +22,11 @@ namespace DbdocFramework.Extensions
             }
 
             return result;
+        }
+
+        public static bool Contains<T>(this IEnumerable<T> sequence, Func<T, bool> predicate)
+        {
+            return sequence.FirstOrDefault(predicate) != null;
         }
     }
 }

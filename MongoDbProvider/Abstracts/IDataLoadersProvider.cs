@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace DbdocFramework.MongoDbProvider.Abstracts
+﻿namespace DbdocFramework.MongoDbProvider.Abstracts
 {
-    interface IDataLoadersProvider
+    internal interface IDataLoadersProvider
     {
         IDataLoader<TResult> GetDataLoader<TResult>();
     }

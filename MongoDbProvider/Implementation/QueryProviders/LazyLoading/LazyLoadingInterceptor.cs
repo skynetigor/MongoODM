@@ -2,29 +2,21 @@
 using System.Collections.Generic;
 using System.Reflection;
 using Castle.DynamicProxy;
-using DbdocFramework.DI.Abstract;
 using DbdocFramework.Extensions;
 using DbdocFramework.MongoDbProvider.Abstracts;
-using MongoDB.Driver;
 
 namespace DbdocFramework.MongoDbProvider.Implementation.QueryProviders.LazyLoading
 {
     internal class LazyLoadingInterceptor : ILazyLoadingInterceptor
     {
-        private IMongoDatabase Database { get; }
         private ITypeInitializer TypeMetadata { get; }
-        private ICustomServiceProvider ServiceProvider { get; }
-        private ProxyGenerator ProxyGenerator { get; }
         private IDataLoadersProvider DataLoadersProvider { get; }
         private MethodInfo LoadDataGenericMethodInfo { get; }
 
-        public LazyLoadingInterceptor(IMongoDatabase database, ITypeInitializer typeMetadata, ICustomServiceProvider serviceProvider, IDataLoadersProvider dataLoadersProvider)
+        public LazyLoadingInterceptor(ITypeInitializer typeMetadata, IDataLoadersProvider dataLoadersProvider)
         {
-            Database = database;
             TypeMetadata = typeMetadata;
-            ServiceProvider = serviceProvider;
             this.DataLoadersProvider = dataLoadersProvider;
-            ProxyGenerator = new ProxyGenerator();
 
             LoadDataGenericMethodInfo = this.GetPrivateMethod(nameof(LoadDataGeneric));
         }

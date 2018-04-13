@@ -5,7 +5,7 @@ using DbdocFramework.Abstracts;
 
 namespace DbdocFramework.MongoDbProvider.Abstracts
 {
-    interface ILazyLoadingIncludableQueryable<T>: IIncludableQueryable<T>
+    internal interface ILazyLoadingIncludableQueryable<T>: IIncludableQueryable<T>
     {
     }
 }

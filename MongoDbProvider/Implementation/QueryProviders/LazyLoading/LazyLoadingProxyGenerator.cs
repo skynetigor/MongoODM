@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Castle.DynamicProxy;
 using DbdocFramework.DI.Abstract;
@@ -28,37 +29,51 @@ namespace DbdocFramework.MongoDbProvider.Implementation.QueryProviders.LazyLoadi
             }
 
             var targetType = target.GetType();
-            var interceptor = this.ServiceProvider.GetService<ILazyLoadingInterceptor>();
+            var interceptor = ServiceProvider.GetService<ILazyLoadingInterceptor>();
             var proxy = ProxyGenerator.CreateClassProxyWithTarget(targetType, target, interceptor);
 
             foreach (var propertyInfo in target.GetType().GetProperties())
             {
-                if (!propertyInfo.GetGetMethod().IsVirtual)
-                {
-                    propertyInfo.SetValue(proxy, propertyInfo.GetValue(target));
-                }
-                else if(this.TypeInitializer.IsTypeRegistered(propertyInfo.PropertyType))
+                bool isVirtual = propertyInfo.GetGetMethod().IsVirtual;
+
+                if (IsTypeRegistered(propertyInfo.PropertyType) && isVirtual)
                 {
                     var value = propertyInfo.GetValue(target);
 
-                    if (value != null)
-                    {
-                       propertyInfo.SetValue(target, this.CreateProxyHelper(value));
-                    }
+                    propertyInfo.SetValue(target, CreateProxyHelper(value));
+                }
+                else
+                {
+                    propertyInfo.SetValue(proxy, propertyInfo.GetValue(target));
                 }
             }
 
             return proxy;
         }
 
+        private bool IsTypeRegistered(Type type)
+        {
+            if (type.IsGenericType)
+            {
+                var genericDefinition = type.GetGenericTypeDefinition();
+
+                if (genericDefinition == typeof(ICollection<>) || genericDefinition == typeof(IList<>))
+                {
+                    type = type.GetGenericArguments()[0];
+                }
+            }
+
+            return TypeInitializer.IsTypeRegistered(type);
+        }
+
         public T CreateProxy<T>(T target)
         {
-            return (T)this.CreateProxyHelper(target);
+            return (T)CreateProxyHelper(target);
         }
 
         public IEnumerable<T> CreateProxies<T>(IEnumerable<T> targets)
         {
-            return targets.Select(this.CreateProxy);
+            return targets.Select(CreateProxy);
         }
     }
 }

@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace DbdocFramework.MongoDbProvider.Abstracts
 {
-    interface ILazyLoadingProxyGenerator
+    internal interface ILazyLoadingProxyGenerator
     {
         T CreateProxy<T>(T target);
 

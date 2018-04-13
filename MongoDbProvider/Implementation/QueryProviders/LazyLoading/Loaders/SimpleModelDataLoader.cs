@@ -2,11 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using DbdocFramework.DI.Abstract;
-using DbdocFramework.DI.Extensions;
 using DbdocFramework.MongoDbProvider.Abstracts;
-using DbdocFramework.MongoDbProvider.Models;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -54,7 +51,7 @@ namespace DbdocFramework.MongoDbProvider.Implementation.QueryProviders.LazyLoadi
                 }
                 return default(T);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 return default(T);
             }

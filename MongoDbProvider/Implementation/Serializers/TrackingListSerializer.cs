@@ -1,17 +1,12 @@
 ﻿using System.Collections.Generic;
+using DbdocFramework.MongoDbProvider.Models;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
-using DbdocFramework.MongoDbProvider.Models;
 
-namespace DbdocFramework.MongoDbProvider.Serializers
+namespace DbdocFramework.MongoDbProvider.Implementation.Serializers
 {
     internal class TrackingICollectionSerializer<T> : SerializerBase<ICollection<T>>
     {
-        public TrackingICollectionSerializer()
-        {
-            
-        }
-
         public override ICollection<T> Deserialize(BsonDeserializationContext context, BsonDeserializationArgs args)
         {
             var array = BsonSerializer.LookupSerializer<T[]>().Deserialize(context, args);

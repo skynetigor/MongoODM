@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Reflection;
-using System.Text;
 using DbdocFramework.DI.Abstract;
-using DbdocFramework.MongoDbProvider.Abstracts;
 using DbdocFramework.MongoDbProvider.Models;
 
 namespace DbdocFramework.MongoDbProvider.Implementation.QueryProviders.LazyLoading.Loaders
