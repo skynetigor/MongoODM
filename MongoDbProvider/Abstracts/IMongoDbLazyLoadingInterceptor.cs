@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Castle.DynamicProxy;
+﻿using Castle.DynamicProxy;
 
 namespace DbdocFramework.MongoDbProvider.Abstracts
 {
-    interface IMongoDbLazyLoadingInterceptor: IInterceptor
+    internal interface ILazyLoadingInterceptor: IInterceptor
     {
-        T CreateProxy<T>(T target);
-
-        IEnumerable<T> CreateProxies<T>(IEnumerable<T> targets);
+        
     }
 }

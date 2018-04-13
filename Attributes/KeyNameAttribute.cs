@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using DbdocFramework.DI.Abstract;
 using DbdocFramework.MongoDbProvider.Models;
 
 namespace DbdocFramework.Attributes
@@ -9,7 +8,7 @@ namespace DbdocFramework.Attributes
 
     public class KeyNameAttribute : AbstractORMAttribute
     {
-        public override void Map(TypeMetadata model, Type currentType, ICustomServiceProvider serviceProvider)
+        public override void Map(TypeMetadata model, Type currentType)
         {
             model.IdProperty = currentType.GetProperties().FirstOrDefault(p => p.GetCustomAttributes(typeof(KeyNameAttribute), false) != null);
         }

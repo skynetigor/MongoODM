@@ -6,6 +6,6 @@ namespace DbdocFramework.Abstracts
 {
     interface ITypeMetadata
     {
-        void Map(TypeMetadata model, Type currentType, ICustomServiceProvider serviceProvider);
+        void Map(TypeMetadata model, Type currentType);
     }
 }

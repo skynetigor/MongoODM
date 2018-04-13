@@ -1,21 +1,20 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Reflection;
 using DbdocFramework.Extensions;
+using DbdocFramework.MongoDbProvider.Extensions;
+using DbdocFramework.MongoDbProvider.Helpers;
+using DbdocFramework.MongoDbProvider.Implementation.TypeMetadataInitializer;
+using DbdocFramework.MongoDbProvider.Models;
 using MongoDB.Bson;
+using MongoDB.Bson.IO;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
-using DbdocFramework.MongoDbProvider.Abstracts;
-using DbdocFramework.MongoDbProvider.Helpers;
-using DbdocFramework.MongoDbProvider.Models;
-using MongoDB.Bson.IO;
 
-namespace DbdocFramework.MongoDbProvider.Serializers
+namespace DbdocFramework.MongoDbProvider.Implementation.Serializers
 {
     class ModelsSerializer<T> : SerializerBase<T>, IBsonDocumentSerializer
     {
         private const string MongoIdProperty = "_id";
-        private readonly ITypeInitializer _typeInitializer;
         private BsonClassMapSerializer<T> _serializer;
         private TypeMetadata CurentTypeModel { get; }
 
@@ -33,10 +32,9 @@ namespace DbdocFramework.MongoDbProvider.Serializers
             }
         }
 
-        public ModelsSerializer(ITypeInitializer typeInitializer) : base()
+        public ModelsSerializer() : base()
         {
-            this._typeInitializer = typeInitializer;
-            this.CurentTypeModel = this._typeInitializer.GetTypeMetadata(this.ValueType);
+            this.CurentTypeModel = TypeInitializerStatic.GetTypeMetadata(this.ValueType);
         }
 
         public override void Serialize(BsonSerializationContext context, BsonSerializationArgs args, T value)
@@ -72,14 +70,9 @@ namespace DbdocFramework.MongoDbProvider.Serializers
                         }
                     }
                 }
-                else if (prop.PropertyType.Name == typeof(ICollection<>).Name ||
-                    prop.PropertyType.Name == typeof(IList<>).Name || propertyValue == null)
+                else if (TypeInitializerStatic.GetTypeMetadata(prop.PropertyType) != null && propertyValue != null)
                 {
-                    continue;
-                }
-                else if (this._typeInitializer.GetTypeMetadata(prop.PropertyType) != null)
-                {
-                    var propTypeModel = this._typeInitializer.GetTypeMetadata(prop.PropertyType);
+                    var propTypeModel = TypeInitializerStatic.GetTypeMetadata(prop.PropertyType);
                     var idValue = propTypeModel.IdProperty.GetValue(propertyValue);
 
                     if (idValue != null)
@@ -89,7 +82,7 @@ namespace DbdocFramework.MongoDbProvider.Serializers
                             .Serialize(context, idValue);
                     }
                 }
-                else
+                else if (!prop.PropertyType.IsIEnumerableType() && propertyValue != null)
                 {
                     bsonWriter.WriteName(prop.Name);
                     BsonSerializer.LookupSerializer(prop.PropertyType).Serialize(context, propertyValue);

@@ -1,32 +1,24 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using Castle.DynamicProxy;
-using DbdocFramework.DI.Abstract;
 using DbdocFramework.Extensions;
 using DbdocFramework.MongoDbProvider.Abstracts;
-using DbdocFramework.MongoDbProvider.Models;
-using MongoDB.Bson;
-using MongoDB.Driver;
 
 namespace DbdocFramework.MongoDbProvider.Implementation.QueryProviders.LazyLoading
 {
-    internal class LazyLoadingInterceptor : IMongoDbLazyLoadingInterceptor
+    internal class LazyLoadingInterceptor : ILazyLoadingInterceptor
     {
-        private IMongoDatabase Database { get; }
         private ITypeInitializer TypeMetadata { get; }
-        private ICustomServiceProvider ServiceProvider { get; }
-        private ProxyGenerator ProxyGenerator { get; }
         private IDataLoadersProvider DataLoadersProvider { get; }
+        private MethodInfo LoadDataGenericMethodInfo { get; }
 
-
-        public LazyLoadingInterceptor(IMongoDatabase database, ITypeInitializer typeMetadata, ICustomServiceProvider serviceProvider, IDataLoadersProvider dataLoadersProvider)
+        public LazyLoadingInterceptor(ITypeInitializer typeMetadata, IDataLoadersProvider dataLoadersProvider)
         {
-            Database = database;
             TypeMetadata = typeMetadata;
-            ServiceProvider = serviceProvider;
             this.DataLoadersProvider = dataLoadersProvider;
-            ProxyGenerator = new ProxyGenerator();
+
+            LoadDataGenericMethodInfo = this.GetPrivateMethod(nameof(LoadDataGeneric));
         }
 
         public void Intercept(IInvocation invocation)
@@ -35,40 +27,23 @@ namespace DbdocFramework.MongoDbProvider.Implementation.QueryProviders.LazyLoadi
             {
                 var value = invocation.MethodInvocationTarget.Invoke(invocation.InvocationTarget, invocation.Arguments);
 
-                if (value == null)
+                if (IsTypeRegistered(invocation.Method.ReturnType))
                 {
-                    var invokedProperty = invocation.TargetType.GetProperty(invocation.Method.Name.Substring(4));
-                    value = this.LoadData(invocation.InvocationTarget, invokedProperty);
-                    invokedProperty.SetValue(invocation.InvocationTarget, value);
+                    if (value == null || !ProxyUtil.IsProxy(value))
+                    {
+                        var invokedProperty = invocation.TargetType.GetProperty(invocation.Method.Name.Substring(4));
+                        value = this.LoadData(invocation.InvocationTarget, invokedProperty);
+                        invokedProperty.SetValue(invocation.InvocationTarget, value);
+                    }
                 }
-
-                invocation.ReturnValue = value;
             }
 
             invocation.Proceed();
         }
 
-        public T CreateProxy<T>(T target)
-        {
-            var proxy = ProxyGenerator.CreateClassProxyWithTarget(typeof(T), target, this);
-            foreach (var propertyInfo in target.GetType().GetProperties())
-            {
-                if (!propertyInfo.GetGetMethod().IsVirtual)
-                {
-                    propertyInfo.SetValue(proxy, propertyInfo.GetValue(target));
-                }
-            }
-            return (T)proxy;
-        }
-
-        public IEnumerable<T> CreateProxies<T>(IEnumerable<T> targets)
-        {
-            return targets.Select(this.CreateProxy);
-        }
-
         private object LoadData(object obj, PropertyInfo invokedProp)
         {
-            return this.GetPrivateMethod(nameof(LoadDataGeneric))
+            return LoadDataGenericMethodInfo
                  .MakeGenericMethod(obj.GetType(), invokedProp.PropertyType)
                  .Invoke(this,
                      new object[] { obj, invokedProp });
@@ -77,6 +52,21 @@ namespace DbdocFramework.MongoDbProvider.Implementation.QueryProviders.LazyLoadi
         private TResult LoadDataGeneric<TSource, TResult>(TSource source, PropertyInfo loadedProperty)
         {
             return this.DataLoadersProvider.GetDataLoader<TResult>().LoadData(source, loadedProperty);
+        }
+
+        private bool IsTypeRegistered(Type type)
+        {
+            if (type.IsGenericType)
+            {
+                var genericDefinition = type.GetGenericTypeDefinition();
+
+                if (genericDefinition == typeof(ICollection<>) || genericDefinition == typeof(IList<>))
+                {
+                    type = type.GetGenericArguments()[0];
+                }
+            }
+
+            return TypeMetadata.IsTypeRegistered(type);
         }
     }
 }

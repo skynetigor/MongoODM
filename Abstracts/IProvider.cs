@@ -8,6 +8,5 @@ namespace DbdocFramework.Abstracts
     {
         void RegisterModel<TModel>() where TModel : class;
         IDbSet<TModel> GetDbSet<TModel>() where TModel : class;
-        void InitializeTypesMetadata();
     }
 }

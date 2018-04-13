@@ -1,30 +1,32 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using DbdocFramework.MongoDbProvider.Abstracts;
 using MongoDB.Driver;
 
 namespace DbdocFramework.MongoDbProvider.Implementation.QueryProviders.LazyLoading
 {
-    internal class LazyLoadingQueryProvider<T>: AbstractQueryProviderFromPipeline<T> where T: class 
+    internal class LazyLoadingQueryProvider<T> : AbstractQueryProviderFromPipeline<T> where T : class
     {
-        private IMongoDbLazyLoadingInterceptor Interceptor { get; }
+        private ILazyLoadingProxyGenerator ProxyGenerator { get; }
 
-        public LazyLoadingQueryProvider(IMongoDatabase database, ITypeInitializer typeInitializer, IMongoDbLazyLoadingInterceptor interceptor) : base(database, typeInitializer)
+        public LazyLoadingQueryProvider(IMongoDatabase database, ITypeInitializer typeInitializer, ILazyLoadingProxyGenerator interceptor) : base(database, typeInitializer)
         {
-            this.Interceptor = interceptor;
+            this.ProxyGenerator = interceptor;
         }
 
         public override object Execute(Expression expression)
         {
             var data = base.Execute(expression);
 
-            if (data is IEnumerable<T> enumerable)
+            switch (data)
             {
-                return enumerable.Select(this.Interceptor.CreateProxy);
+                case IEnumerable<T> enumerable:
+                    return this.ProxyGenerator.CreateProxies(enumerable);
+                case T entity:
+                    return this.ProxyGenerator.CreateProxy(entity);
             }
 
-            return this.Interceptor.CreateProxy((T)data);
+            return data;
         }
     }
 }

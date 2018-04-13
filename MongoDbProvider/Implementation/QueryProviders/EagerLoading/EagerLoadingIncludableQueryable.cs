@@ -11,18 +11,8 @@ namespace DbdocFramework.MongoDbProvider.Implementation.QueryProviders.EagerLoad
 
         private ICustomServiceProvider ServiceProvider { get; }
 
-        protected override IQueryProviderFromPipeline<T> QueryProviderFromPipeline
-        {
-            get
-            {
-                if (queryProvider == null)
-                {
-                    queryProvider = this.ServiceProvider.GetService<EagerLoadingQueryProvider<T>>();
-                }
-
-                return queryProvider;
-            }
-        }
+        protected override IQueryProviderFromPipeline<T> QueryProviderFromPipeline => queryProvider ??
+                                                                                      (queryProvider = this.ServiceProvider.GetService<EagerLoadingQueryProvider<T>>());
 
         public EagerLoadingIncludableQueryable(ITypeInitializer typeInitializer, ICustomServiceProvider serviceProvider, IMongoDatabase database) : base(typeInitializer, database)
         {

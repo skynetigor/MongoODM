@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using DbdocFramework.Abstracts;
+﻿using DbdocFramework.Abstracts;
 
 namespace DbdocFramework.MongoDbProvider.Abstracts
 {
-    interface IDbsetContainer
+    internal interface IDbsetContainer
     {
         IDbSet<T> GetDbSet<T>() where T: class;
     }

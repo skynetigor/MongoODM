@@ -2,7 +2,7 @@
 
 namespace DbdocFramework.MongoDbProvider.Abstracts
 {
-    interface IDataLoader<TResult>
+    internal interface IDataLoader<TResult>
     {
         TResult LoadData<TSource>(TSource source, PropertyInfo loadedProperty);
     }

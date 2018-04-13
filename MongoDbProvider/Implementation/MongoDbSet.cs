@@ -1,14 +1,13 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using DbdocFramework.Abstracts;
 using DbdocFramework.DI.Abstract;
 using DbdocFramework.MongoDbProvider.Abstracts;
+using DbdocFramework.MongoDbProvider.Helpers;
 using DbdocFramework.MongoDbProvider.Models;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -28,7 +27,7 @@ namespace DbdocFramework.MongoDbProvider.Implementation
         {
             this.Database = database;
             this.TypeInitializer = typeInitializer;
-            this.CurrentTypeModel = TypeInitializer.RegisterType<TEntity>();
+            this.CurrentTypeModel = TypeInitializer.GetTypeMetadata<TEntity>();
             this.ServiceProvider = serviceProvider;
             this.DbsetContainer = dbsetContainer;
             this.SetRelationsMethod = this.GetType().GetMethod(nameof(this.SetRelations), BindingFlags.NonPublic | BindingFlags.Instance);
@@ -42,6 +41,7 @@ namespace DbdocFramework.MongoDbProvider.Implementation
             }
 
             this.Database.GetCollection<TEntity>(CurrentTypeModel.CollectionName).InsertOne(entity);
+            this.UpdateIncludedToCollectionModels(entity);
         }
 
         public void AddRange(IEnumerable<TEntity> entities)
@@ -50,20 +50,31 @@ namespace DbdocFramework.MongoDbProvider.Implementation
             var packageCount = 100;
             var currentCount = 0;
 
+            void UpdateAction()
+            {
+                this.Database.GetCollection<TEntity>(CurrentTypeModel.CollectionName).InsertMany(insertableList);
+
+                foreach (var ent in insertableList)
+                {
+                    this.UpdateIncludedToCollectionModels(ent);
+                }
+            }
+
             foreach (TEntity entity in entities)
             {
                 insertableList.Add(entity);
 
                 if (currentCount > 0 && currentCount % packageCount == 0)
                 {
-                    this.Database.GetCollection<TEntity>(CurrentTypeModel.CollectionName).InsertMany(insertableList);
+                    UpdateAction();
+
                     insertableList.Clear();
                 }
 
                 currentCount++;
             }
 
-            this.Database.GetCollection<TEntity>(CurrentTypeModel.CollectionName).InsertMany(insertableList);
+            UpdateAction();
         }
 
         public void Update(TEntity entity)
@@ -73,14 +84,13 @@ namespace DbdocFramework.MongoDbProvider.Implementation
                 return;
             }
 
-            this.UpdateIncludedToCollectionModels(entity);
-
             var id = CurrentTypeModel.IdProperty.GetValue(entity);
             var filter = new BsonDocument
             {
                 { MongoIdProperty, id.ToString() }
             };
             this.Database.GetCollection<TEntity>(CurrentTypeModel.CollectionName).ReplaceOne(filter, entity);
+            this.UpdateIncludedToCollectionModels(entity);
         }
 
         public void UpdateRange(IEnumerable<TEntity> entities)
@@ -93,7 +103,13 @@ namespace DbdocFramework.MongoDbProvider.Implementation
 
         public void Remove(TEntity entity)
         {
-            this.Database.GetCollection<BsonDocument>(CurrentTypeModel.CollectionName).DeleteOne(entity.ToBsonDocument());
+            if (entity != null)
+            {
+                var filter = new BsonDocument { {"_id", (string)this.CurrentTypeModel.IdProperty.GetValue(entity)} };
+
+                this.Database.GetCollection<BsonDocument>(CurrentTypeModel.CollectionName)
+                    .DeleteOne(entity.ToBsonDocument());
+            }
         }
 
         public void RemoveRange(IEnumerable<TEntity> entities)
@@ -119,49 +135,49 @@ namespace DbdocFramework.MongoDbProvider.Implementation
             var trackingListType = typeof(TrackingList<>);
             var trackingProps = this.CurrentTypeModel
                 .CurrentType.GetProperties()
-                .Where(p => (p.PropertyType.IsClass || p.PropertyType.IsInterface) && p.PropertyType != typeof(string));
+                .Where(p =>
+                {
+                    if (p.PropertyType.IsGenericType)
+                    {
+                        var genericTypeDefinition = p.PropertyType.GetGenericTypeDefinition();
+                        return genericTypeDefinition == typeof(ICollection<>) ||
+                               genericTypeDefinition == typeof(IList<>);
+                    }
+
+                    return false;
+                });
 
             foreach (var trList in trackingProps)
             {
-                var trListGerType = trList.PropertyType.GetGenericArguments().FirstOrDefault();
+                var trListGenericArgument = trList.PropertyType.GetGenericArguments()[0];
                 var trListInstance = trList.GetValue(entity);
 
                 if (trListInstance != null)
                 {
-                    var st = trListInstance.GetType().Name;
+                    var trListInstanceType = trListInstance.GetType();
 
-                    if (st != trackingListType.Name)
+                    if (trListInstanceType != trackingListType)
                     {
-                        continue;
+                        trListInstance = TrackingListHelper.CreateNewTrackingList(trListGenericArgument, trListInstance);
+                        trList.SetValue(entity, trListInstance);
                     }
 
-                    var actualTypeModel = this.TypeInitializer.GetTypeMetadata(trListGerType);
+                    var actualTypeModel = this.TypeInitializer.GetTypeMetadata(trListGenericArgument);
 
                     if (actualTypeModel != null)
                     {
-                        var currentTypeProps = trListGerType.GetProperties().Where(p => p.PropertyType == this.CurrentTypeModel.CurrentType);
-                        this.SetRelationsMethod.MakeGenericMethod(trListGerType).Invoke(this, new[] { entity, trListInstance, currentTypeProps });
+                        var currentTypeProps = trListGenericArgument.GetProperties().Where(p => p.PropertyType == this.CurrentTypeModel.CurrentType).ToArray();
+                        SetRelationsMethod.MakeGenericMethod(trListGenericArgument).Invoke(this, new[] { entity, trListInstance, currentTypeProps });
                     }
                 }
             }
         }
 
-        private void SetRelations<T>(TEntity entity, TrackingList<T> trackingList, IEnumerable<PropertyInfo> props) where T : class
+        private void SetRelations<T>(TEntity entity, ITrackingList<T> trackingList, IEnumerable<PropertyInfo> props) where T : class
         {
             var newEntities = new List<T>();
             var updatedEntities = new List<T>();
             var tmodel = this.TypeInitializer.GetTypeMetadata<T>();
-
-            foreach (var ent in trackingList.AddedList)
-            {
-                if (this.CurrentTypeModel.IdProperty.GetValue(ent) == null)
-                {
-                    newEntities.Add(ent);
-                    continue;
-                }
-
-                updatedEntities.Add(ent);
-            }
 
             foreach (var ent in trackingList.AddedList)
             {
@@ -172,6 +188,14 @@ namespace DbdocFramework.MongoDbProvider.Implementation
                         prop.SetValue(ent, entity);
                     }
                 }
+
+                if (tmodel.IdProperty.GetValue(ent) == null)
+                {
+                    newEntities.Add(ent);
+                    continue;
+                }
+
+                updatedEntities.Add(ent);
             }
 
             foreach (var ent in trackingList.RemovedList)
@@ -185,9 +209,8 @@ namespace DbdocFramework.MongoDbProvider.Implementation
                 }
             }
 
-            var tModel = this.TypeInitializer.GetTypeMetadata<T>();
             var modelsProvider = this.DbsetContainer.GetDbSet<T>();
-            var updated = updatedEntities.Concat(trackingList.RemovedList);
+            var updated = updatedEntities.Concat(trackingList.RemovedList).ToArray();
 
             if (updated.Any())
             {
