@@ -1,4 +1,5 @@
-﻿using DbdocFramework.Abstracts;
+﻿using System;
+using DbdocFramework.Abstracts;
 using System.Linq;
 using DbdocFramework.Extensions;
 using DbdocFramework.MongoDbProvider.Settings;
@@ -16,7 +17,13 @@ namespace DbdocFramework
         }
 
         protected DocumentDbContext(MongoDbContextSettings mongoSettings)
-            : this(new MongoDbProvider.MongoDbProvider(mongoSettings)) { } 
+            : this(new MongoDbProvider.MongoDbProvider(mongoSettings)) { }
+
+        protected DocumentDbContext(Func<DocumentDbOptionsBuilder, IProvider> providerBuilder) : this(
+            providerBuilder(new DocumentDbOptionsBuilder()))
+        {
+
+        }
 
         public IDbSet<T> Set<T>()
             where T : class
