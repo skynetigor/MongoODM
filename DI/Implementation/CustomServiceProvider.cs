@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using DbdocFramework.DI.Abstract;
+using DbdocFramework.Extensions;
 
 namespace DbdocFramework.DI.Implementation
 {
@@ -27,11 +28,9 @@ namespace DbdocFramework.DI.Implementation
         {
             var constructorInfo = instanceType.GetConstructors();
 
-            object instance = null;
-
             for (int i = constructorInfo.Length - 1; i >= 0; i--)
             {
-                instance = this.CreateInstance(constructorInfo[i], instanceType);
+                var instance = this.CreateInstance(constructorInfo[i], instanceType);
 
                 if (instance != null)
                 {

@@ -15,6 +15,11 @@ namespace DbdocFramework
             Setup();
         }
 
+        public void SaveChanges()
+        {
+            this.Provider.SaveChanges();
+        }
+
         protected DocumentDbContext(MongoDbContextSettings mongoSettings)
             : this(new MongoDbProvider.MongoDbProvider(mongoSettings)) { } 
 

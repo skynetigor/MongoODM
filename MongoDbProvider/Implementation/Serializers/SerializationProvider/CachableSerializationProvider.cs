@@ -7,22 +7,22 @@ using DbdocFramework.Extensions;
 
 namespace DbdocFramework.MongoDbProvider.Implementation.Serializers.SerializationProvider
 {
-    class CachableSerializationProvider : AbstractCacheableServiceProvider<IBsonSerializer>, IBsonSerializationProvider
+    class CacheableSerializationProvider : AbstractCacheableServiceProvider<IBsonSerializer>, IBsonSerializationProvider
     {
         private static readonly IDictionary<string, Type> SerializersTypes;
 
         private ITypeInitializer TypeInitializer { get; }
 
-        static CachableSerializationProvider()
+        static CacheableSerializationProvider()
         {
-            SerializersTypes = typeof(CachableSerializationProvider).Assembly.GetTypes()
+            SerializersTypes = typeof(CacheableSerializationProvider).Assembly.GetTypes()
                 .Where(t => !t.IsAbstract && t.GetInterfaces()
                                 .Contains(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IBsonSerializer<>)))
                 .ToDictionary(t => t.GetInterfaces().FirstOrDefault(i => i.GetGenericTypeDefinition() == typeof(IBsonSerializer<>))
                     .GetGenericArguments()[0].ToString());
         }
 
-        public CachableSerializationProvider(ITypeInitializer typeInitializer) : base()
+        public CacheableSerializationProvider(ITypeInitializer typeInitializer) : base()
         {
             TypeInitializer = typeInitializer;
         }

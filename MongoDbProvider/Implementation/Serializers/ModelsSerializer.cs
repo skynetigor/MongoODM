@@ -57,16 +57,12 @@ namespace DbdocFramework.MongoDbProvider.Implementation.Serializers
 
                 if (prop == entityTypeModel.IdProperty)
                 {
-                    if (propertyValue == null)
+                    if (propertyValue != null)
                     {
-                        var id = this.GetId(entityTypeModel.IdProperty);
-
-                        if (id != null)
                         {
-                            entityTypeModel.IdProperty.SetValue(value, id);
                             bsonWriter.WriteName(MongoIdProperty);
                             BsonSerializer.LookupSerializer(entityTypeModel.IdProperty.PropertyType)
-                                .Serialize(context, id);
+                                .Serialize(context, propertyValue);
                         }
                     }
                 }
@@ -82,7 +78,7 @@ namespace DbdocFramework.MongoDbProvider.Implementation.Serializers
                             .Serialize(context, idValue);
                     }
                 }
-                else if (!prop.PropertyType.IsIEnumerableType() && propertyValue != null)
+                else if ((!prop.PropertyType.IsIEnumerableType() || prop.PropertyType == typeof(string)) && propertyValue != null)
                 {
                     bsonWriter.WriteName(prop.Name);
                     BsonSerializer.LookupSerializer(prop.PropertyType).Serialize(context, propertyValue);
